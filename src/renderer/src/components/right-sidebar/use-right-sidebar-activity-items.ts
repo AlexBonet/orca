@@ -94,6 +94,13 @@ export function useRightSidebarActivityItems({
         folderOnly: true
       },
       {
+        id: 'repos',
+        icon: GitBranch,
+        title: translate('auto.components.right.sidebar.index.folderRepos', 'Repos'),
+        shortcut: '',
+        folderOnly: true
+      },
+      {
         id: 'pr-checks',
         icon: ListChecks,
         title: t('auto.components.right.sidebar.index.parentPrChecks', 'PR Checks'),
