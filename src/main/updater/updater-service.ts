@@ -16,6 +16,9 @@ import type { UpdateInstallMode } from './lifecycle/updater-state'
 
 const updater = new UpdaterSetup()
 
+// Why: this fork must never replace itself with upstream releases.
+const UPDATES_DISABLED = true
+
 export function resolveUpdateInstallMode(isServeMode: boolean): UpdateInstallMode {
   return updater.resolveUpdateInstallMode(isServeMode)
 }
@@ -48,14 +51,23 @@ export function installRemoteServerUpdate(runtimeId: string): RemoteServerUpdate
 }
 
 export function checkForUpdates(): void {
+  if (UPDATES_DISABLED) {
+    return
+  }
   updater.checkForUpdates()
 }
 
 export function checkForUpdatesFromMenu(options?: UpdateCheckOptions): void {
+  if (UPDATES_DISABLED) {
+    return
+  }
   updater.checkForUpdatesFromMenu(options)
 }
 
 export function downloadUpdate(): void {
+  if (UPDATES_DISABLED) {
+    return
+  }
   updater.downloadUpdate()
 }
 
@@ -94,5 +106,8 @@ export function setupAutoUpdater(
   mainWindow: BrowserWindow | null,
   opts?: UpdaterSetupOptions
 ): void {
+  if (UPDATES_DISABLED) {
+    return
+  }
   updater.setupAutoUpdater(mainWindow, opts)
 }
