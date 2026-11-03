@@ -43,6 +43,18 @@ export function createRepoAddActions(
             ? runtimeTargetForOwnerEnvironment(options.runtimeEnvironmentId ?? null)
             : defaultCreationHost(get().settings)
         const displayName = options?.displayName?.trim() || undefined
+        if (kind === 'git' && target.kind === 'local') {
+          const { rootPath } = await window.api.repos.getContainingGitRoot({ path })
+          if (rootPath) {
+            // Why: adding a subfolder as Git would silently resolve to the enclosing repo root.
+            get().openModal('confirm-non-git-folder', {
+              folderPath: path,
+              insideGitRoot: rootPath,
+              ...(displayName ? { displayName } : {})
+            })
+            return null
+          }
+        }
         let repo: Repo
         try {
           if (target.kind === 'local') {
