@@ -12,7 +12,7 @@ import { normalizeRuntimePathForComparison } from '../../../shared/cross-platfor
 import { getRepoExecutionHostId, LOCAL_EXECUTION_HOST_ID } from '../../../shared/execution-host'
 import { getEffectiveHostSetting } from '../../../shared/host-setting-overrides'
 import { probeGitAvailability } from '../../git/git-availability'
-import { gitExecFileAsync } from '../../git/runner'
+import { awaitWindowsHostGitEnvironmentReady, gitExecFileAsync } from '../../git/runner'
 import { inspectGitRepoForRegistrationAsync } from '../../git/repo'
 import { getClonePathComparisonKey, getSavedProjectPathKeys } from '../../git/repo-clone-path'
 import { detectRepoLocalMetadata } from '../../repository-icons/repo-icon-autodetect'
@@ -58,6 +58,21 @@ export function registerRepoCreationHandlers(
   enqueueMetadata: RepositoryMetadataOwner['enqueueRepositoryMetadata']
 ): void {
   ipcMain.handle('repos:isGitAvailable', () => probeLocalGitAvailability())
+  ipcMain.handle(
+    'repos:getContainingGitRoot',
+    async (_event, args: { path: string }): Promise<{ rootPath: string | null }> => {
+      await awaitWindowsHostGitEnvironmentReady({ cwd: args.path })
+      const info = await inspectGitRepoForRegistrationAsync(args.path)
+      if (!info.isRepo) {
+        return { rootPath: null }
+      }
+      // Why: only a strict subfolder needs a choice; picking the repo root keeps the normal Git flow.
+      const isRoot =
+        normalizeRuntimePathForComparison(info.rootPath) ===
+        normalizeRuntimePathForComparison(args.path)
+      return { rootPath: isRoot ? null : info.rootPath }
+    }
+  )
   ipcMain.handle('repos:getDefaultCreateProjectParent', () => getDefaultCreateProjectParent(store))
 
   ipcMain.handle(

@@ -72,6 +72,7 @@ const NonGitFolderDialog = React.memo(function NonGitFolderDialog() {
   const runtimeEnvironmentId =
     typeof modalData.runtimeEnvironmentId === 'string' ? modalData.runtimeEnvironmentId : ''
   const displayName = typeof modalData.displayName === 'string' ? modalData.displayName.trim() : ''
+  const insideGitRoot = typeof modalData.insideGitRoot === 'string' ? modalData.insideGitRoot : ''
   const runtimeEnvironmentName =
     runtimeEnvironmentId &&
     (runtimeEnvironments.find((environment) => environment.id === runtimeEnvironmentId)?.name ||
@@ -161,10 +162,16 @@ const NonGitFolderDialog = React.memo(function NonGitFolderDialog() {
             {t('auto.components.sidebar.NonGitFolderDialog.e52454b7f6', 'Open as Folder')}
           </DialogTitle>
           <DialogDescription className="text-xs">
-            {t(
-              'auto.components.sidebar.NonGitFolderDialog.8fba4b8cbb',
-              "This folder isn't a Git repository. You'll have the editor, terminal, and search, but Git-based features won't be available."
-            )}
+            {insideGitRoot
+              ? t(
+                  'auto.components.sidebar.NonGitFolderDialog.insideGitRoot',
+                  'This folder is inside the Git repository {{root}}. It will open as a plain folder without Git features. To use Git here, add the repository folder instead.',
+                  { root: insideGitRoot }
+                )
+              : t(
+                  'auto.components.sidebar.NonGitFolderDialog.8fba4b8cbb',
+                  "This folder isn't a Git repository. You'll have the editor, terminal, and search, but Git-based features won't be available."
+                )}
             <span className="mt-2 block">{checkedHostDescription}</span>
           </DialogDescription>
         </DialogHeader>

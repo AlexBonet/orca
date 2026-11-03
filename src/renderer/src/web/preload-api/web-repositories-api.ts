@@ -71,6 +71,7 @@ export function createReposApi(): NonNullable<Partial<PreloadApi>['repos']> {
     },
     isGitAvailable: async () =>
       (await callRuntimeResult<{ available: boolean }>('repo.gitAvailable')).available,
+    getContainingGitRoot: async () => ({ rootPath: null }),
     getDefaultCreateProjectParent: async () => {
       const result = await callRuntimeResult<{ resolvedPath: string }>('files.browseServerDir', {
         path: '~'

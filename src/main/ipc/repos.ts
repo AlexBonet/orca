@@ -56,6 +56,7 @@ export function registerRepoHandlers(
   ipcMain.removeHandler('repos:checkCloneTarget')
   ipcMain.removeHandler('repos:cloneAbort')
   ipcMain.removeHandler('repos:isGitAvailable')
+  ipcMain.removeHandler('repos:getContainingGitRoot')
   ipcMain.removeHandler('repos:getDefaultCreateProjectParent')
   ipcMain.removeHandler('repos:getBaseRefDefault')
   ipcMain.removeHandler('repos:searchBaseRefs')

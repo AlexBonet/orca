@@ -91,6 +91,8 @@ export type RepositoryApi = {
     kind: 'git' | 'folder'
   }) => Promise<{ repo: Repo } | RepoCreateFailure>
   isGitAvailable: () => Promise<boolean>
+  /** Git root above `path` when `path` is a strict subfolder of a repository; null otherwise. */
+  getContainingGitRoot: (args: { path: string }) => Promise<{ rootPath: string | null }>
   getDefaultCreateProjectParent: () => Promise<string>
   onCloneProgress: (callback: (data: { phase: string; percent: number }) => void) => () => void
   getBaseRefDefault: (args: {
