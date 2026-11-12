@@ -17,6 +17,10 @@ import { parseGitHubIssueOrPRLink } from '../../../../../../shared/github/links'
 import { parseGitLabIssueOrMRLink } from '../../../../../../shared/new-workspace/gitlab-links'
 import { parseLinearIssueInput } from '../../../../../../shared/linear/links'
 import { parseJiraIssueUrl } from '../../../../../../shared/jira/jira-issue-url'
+import {
+  buildPlaneIssueUrl,
+  parsePlaneIssueUrl
+} from '../../../../../../shared/plane/plane-issue-url'
 import { isWorkItemLinkQueryTooLarge } from '../../../../../../shared/new-workspace/work-item-link-query-bounds'
 
 export const ATTACHMENT_INPUT_KINDS = [
@@ -60,6 +64,7 @@ export function workspaceAttachmentProviderLabel(item: WorkspaceAttachment): str
     gitlab: 'GitLab',
     linear: 'Linear',
     jira: 'Jira',
+    plane: 'Plane',
     bitbucket: 'Bitbucket',
     'azure-devops': 'Azure DevOps',
     gitea: 'Gitea'
@@ -97,6 +102,16 @@ export function parseWorkspaceAttachmentInput(
     }
     if (gitlab && Number.isSafeInteger(gitlab.number) && gitlab.number > 0) {
       return { provider: 'gitlab', type: gitlab.type, number: gitlab.number, url: value }
+    }
+    const plane = parsePlaneIssueUrl(value)
+    if (plane) {
+      return {
+        provider: 'plane',
+        type: 'issue',
+        number: 0,
+        identifier: plane.issueKey,
+        url: buildPlaneIssueUrl(plane.workspaceSlug, plane.issueKey)
+      }
     }
     if (jira) {
       return {

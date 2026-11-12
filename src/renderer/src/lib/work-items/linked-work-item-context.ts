@@ -95,6 +95,26 @@ export function buildLinearLaunchContextBlock(args: LinearLaunchContextArgs): st
   return lines.join('\n')
 }
 
+// Plane prose is untrusted too; the draft names the item and how to read it through the CLI.
+export function buildPlaneLaunchContextBlock(args: {
+  identifier: string | undefined
+  url?: string
+}): string | null {
+  const identifier = args.identifier?.trim()
+  const url = args.url?.trim()
+  if (!identifier && !url) {
+    return null
+  }
+  const lines = [identifier ? `Linked Plane work item: ${identifier}` : 'Linked Plane work item']
+  if (url) {
+    lines.push(url)
+  }
+  if (identifier) {
+    lines.push(`Read it with the Orca CLI: orca plane issue ${identifier} --json`)
+  }
+  return lines.join('\n')
+}
+
 function escapeLinkedContextControlChars(value: string): string {
   return Array.from(value, (char) => {
     const code = char.codePointAt(0) ?? 0
@@ -152,10 +172,15 @@ export function getLaunchableWorkItemDraftContent(args: {
   url: string
   title?: string
   linearIdentifier?: string
+  identifier?: string
   linkedContext?: LinkedWorkItemContext
 }): string {
   if (args.pasteContent?.trim()) {
     return args.pasteContent
+  }
+  if (args.provider === 'plane') {
+    const planeBlock = buildPlaneLaunchContextBlock({ identifier: args.identifier, url: args.url })
+    return planeBlock ? formatDraftContextBlock(planeBlock) : args.url
   }
   if (isLinearWorkItemReference(args)) {
     const linearBlock = buildLinearLaunchContextBlock({
@@ -178,8 +203,9 @@ export function resolveQuickCreateLinkedWorkItemPrompt(
           url: string
           title?: string
           linearIdentifier?: string
+          identifier?: string
         },
-        'provider' | 'number' | 'url' | 'title' | 'linearIdentifier'
+        'provider' | 'number' | 'url' | 'title' | 'linearIdentifier' | 'identifier'
       > & { linkedContext?: LinkedWorkItemContext })
     | null
     | undefined,
@@ -194,7 +220,15 @@ export function resolveQuickCreateLinkedWorkItemPrompt(
         url: linkedWorkItem?.url
       })
     : null
-  const linearDraft = linearBlock ? formatDraftContextBlock(linearBlock) : null
+  const planeBlock =
+    linkedWorkItem?.provider === 'plane'
+      ? buildPlaneLaunchContextBlock({
+          identifier: linkedWorkItem.identifier,
+          url: linkedWorkItem.url
+        })
+      : null
+  const contextBlock = linearBlock ?? planeBlock
+  const linearDraft = contextBlock ? formatDraftContextBlock(contextBlock) : null
   const linkedUrl = linkedWorkItem?.url?.trim() || null
   const draftPrompt = linearDraft
     ? [trimmedNote, linearDraft].filter(Boolean).join('\n\n')

@@ -1,4 +1,5 @@
 import { parseJiraIssueUrl, JIRA_ISSUE_KEY_PATTERN } from '../jira/jira-issue-url'
+import { buildPlaneIssueUrl, parsePlaneIssueUrl } from '../plane/plane-issue-url'
 import { parseLinearIssueInput, parseLinearIssueUrlIntent } from '../linear/links'
 import { getTaskSourceCacheScope } from '../work-items/task-source-context'
 import type { WorkspaceAttachment } from '../worktree/types'
@@ -22,6 +23,9 @@ const PUBLIC_REFERENCE_HOSTS = new Set([
 function referenceHostProvider(host: string): WorkspaceAttachment['provider'] | undefined {
   if (host === 'linear.app') {
     return 'linear'
+  }
+  if (host === 'app.plane.so') {
+    return 'plane'
   }
   return PUBLIC_REFERENCE_HOSTS.has(host)
     ? (getPublicForgeProviderForHost(host) ?? undefined)
@@ -99,6 +103,16 @@ function parseReferenceRoute(
       linearIdentifier: linear.identifier,
       linearOrganizationUrlKey: linear.organizationUrlKey.toLowerCase(),
       url: url.href
+    }
+  }
+  const plane = !providerHint || providerHint === 'plane' ? parsePlaneIssueUrl(url.href) : null
+  if (plane) {
+    return {
+      provider: 'plane',
+      type: 'issue',
+      number: 0,
+      identifier: plane.issueKey,
+      url: buildPlaneIssueUrl(plane.workspaceSlug, plane.issueKey)
     }
   }
   // Git hosts (and Bitbucket Server /repos/ file views) also serve /browse/KEY-1 paths.
@@ -197,6 +211,10 @@ function externalUrl(item: WorkspaceAttachment): string | undefined {
     case 'jira':
       return identity.siteUrl && identifier
         ? `${identity.siteUrl.replace(/\/+$/, '')}/browse/${identifier}`
+        : undefined
+    case 'plane':
+      return identity.workspaceSlug && identifier
+        ? buildPlaneIssueUrl(identity.workspaceSlug, identifier)
         : undefined
     case 'linear':
       return undefined

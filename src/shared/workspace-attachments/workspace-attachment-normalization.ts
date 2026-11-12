@@ -11,6 +11,11 @@ import { normalizeWorkspaceLinkedItem } from './workspace-linked-item'
 import { getProvenWorkspaceReferenceIdentity } from './workspace-reference-identity'
 import { isWorkspaceLinkedItemSourceContextMatch } from './workspace-linked-item-source-context'
 
+// Providers whose references are keyed by a native identifier (PROJ-1) instead of a numeric id.
+function isIdentifierKeyedProvider(provider: unknown): boolean {
+  return provider === 'linear' || provider === 'jira' || provider === 'plane'
+}
+
 function nonEmpty(value: unknown): string | undefined {
   return typeof value === 'string' && value.trim() ? value.trim() : undefined
 }
@@ -26,6 +31,7 @@ export function normalizeWorkspaceAttachment(value: unknown): WorkspaceAttachmen
     provider !== 'gitlab' &&
     provider !== 'linear' &&
     provider !== 'jira' &&
+    provider !== 'plane' &&
     provider !== 'bitbucket' &&
     provider !== 'azure-devops' &&
     provider !== 'gitea'
@@ -36,7 +42,7 @@ export function normalizeWorkspaceAttachment(value: unknown): WorkspaceAttachmen
   if (type !== 'issue' && type !== 'pr' && type !== 'mr') {
     return null
   }
-  if ((provider === 'linear' || provider === 'jira') && type !== 'issue') {
+  if (isIdentifierKeyedProvider(provider) && type !== 'issue') {
     return null
   }
   if (type === 'mr' && provider !== 'gitlab') {
@@ -47,7 +53,7 @@ export function normalizeWorkspaceAttachment(value: unknown): WorkspaceAttachmen
   }
   const identifier =
     nonEmpty(raw.identifier) ?? nonEmpty(raw.linearIdentifier) ?? nonEmpty(raw.jiraIdentifier)
-  if (raw.number === 0 && (!identifier || (provider !== 'linear' && provider !== 'jira'))) {
+  if (raw.number === 0 && (!identifier || !isIdentifierKeyedProvider(provider))) {
     return null
   }
   if (raw.url !== undefined) {
@@ -101,7 +107,7 @@ function attachmentIdentity(item: WorkspaceAttachment): string {
   return JSON.stringify([
     item.provider,
     item.type,
-    item.provider === 'linear' || item.provider === 'jira'
+    isIdentifierKeyedProvider(item.provider)
       ? (item.identifier ?? item.linearIdentifier ?? item.jiraIdentifier ?? item.number)
       : item.number
   ])

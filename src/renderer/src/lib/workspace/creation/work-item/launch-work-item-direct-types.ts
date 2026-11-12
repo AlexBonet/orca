@@ -14,7 +14,7 @@ export type DirectWorkItemLaunchInputs = AgentLaunchInputViews &
   }
 
 export type LaunchableWorkItem = {
-  provider?: TaskProvider
+  provider?: Exclude<TaskProvider, 'plane'>
   title: string
   url: string
   type: 'issue' | 'pr' | 'mr'

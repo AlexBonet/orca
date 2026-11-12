@@ -7,9 +7,9 @@ import type { RpcResponse } from '../transport/rpc/rpc-wire-types'
 import { taskLinearStatusRead, taskPreflightRead } from '../tasks/mobile-task-runtime-operations'
 import {
   filterAvailableTaskProviders,
-  normalizeVisibleTaskProviders,
   type TaskProvider
 } from '../../../src/shared/work-items/task-providers'
+import { normalizeVisibleTaskProviders } from '../tasks/mobile-visible-task-providers'
 import {
   readJiraConnectionProbeReply,
   type MobileJiraConnection

@@ -1,5 +1,6 @@
 import type { TaskPageLinearCreationStateModel } from './linear/use-task-page-linear-creation-state'
 import { useMemo } from 'react'
+import { useAppStore } from '@/store'
 import type { GitHubTaskKind } from '../../../../shared/work-items/task-github-search'
 import { buildGitHubRepoUrl } from '../../../../shared/github/links'
 import { getTaskSourceContextSummary } from '../task-source-context-summary'
@@ -39,6 +40,7 @@ export function useTaskPageSourceDisplay<Model extends TaskPageSourceDisplayInpu
   const linearWorkspaceName =
     selectedLinearWorkspace?.organizationName ?? selectedLinearWorkspace?.id ?? null
   const jiraSiteName = selectedJiraSite?.displayName ?? selectedJiraSite?.siteUrl ?? null
+  const planeWorkspaceName = useAppStore((s) => s.planeStatus.workspaceSlug)
   // Why the catalog dep: it changes with the language, and the summary's own copy is translated too.
   const taskSourceContextSummary = useMemo(() => {
     const providerLabel =
@@ -51,7 +53,7 @@ export function useTaskPageSourceDisplay<Model extends TaskPageSourceDisplayInpu
         hostLabelById
       })
     }
-    if (taskSource === 'linear' || taskSource === 'jira') {
+    if (taskSource === 'linear' || taskSource === 'jira' || taskSource === 'plane') {
       return getTaskSourceContextSummary({
         provider: taskSource,
         providerLabel,
@@ -59,7 +61,8 @@ export function useTaskPageSourceDisplay<Model extends TaskPageSourceDisplayInpu
         accountHostId: accountBackedTaskSourceHostId,
         hostLabelById,
         linearWorkspaceName,
-        jiraSiteName
+        jiraSiteName,
+        planeWorkspaceName
       })
     }
     return getTaskSourceContextSummary({
@@ -86,6 +89,7 @@ export function useTaskPageSourceDisplay<Model extends TaskPageSourceDisplayInpu
     hostRegistryById,
     jiraSiteName,
     linearWorkspaceName,
+    planeWorkspaceName,
     selectedRepos.length,
     sourceOptions,
     taskSource,

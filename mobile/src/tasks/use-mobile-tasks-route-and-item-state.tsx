@@ -17,10 +17,8 @@ import {
   useSafeAreaInsets,
   useState
 } from './mobile-tasks-dependencies'
-import {
-  type TaskProvider,
-  normalizeVisibleTaskProviders
-} from '../../../src/shared/work-items/task-providers'
+import type { TaskProvider } from '../../../src/shared/work-items/task-providers'
+import { normalizeVisibleTaskProviders } from './mobile-visible-task-providers'
 import { newTabRepoListRead } from '../session/agent-launch/mobile-runtime-repo-operations'
 import { useHostProtocolGates } from '../components/host-protocol-gates-context'
 import { useTaskHostRepos } from './use-task-host-repos'

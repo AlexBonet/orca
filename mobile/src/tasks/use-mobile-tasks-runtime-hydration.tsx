@@ -15,9 +15,9 @@ import {
 import { MOBILE_TASKS_CAPABILITY, useEffect, useLayoutEffect } from './mobile-tasks-dependencies'
 import {
   filterAvailableTaskProviders,
-  normalizeVisibleTaskProviders,
   resolveVisibleTaskProvider
 } from '../../../src/shared/work-items/task-providers'
+import { normalizeVisibleTaskProviders } from './mobile-visible-task-providers'
 import { useRef, useState } from 'react'
 import { translate } from '../i18n/mobile-i18n'
 import { EMPTY_GITHUB_PROJECT_SETTINGS } from './mobile-tasks-legacy-foundation'

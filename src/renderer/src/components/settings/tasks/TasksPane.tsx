@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Github, Gitlab } from 'lucide-react'
+import { Github, Gitlab, Plane } from 'lucide-react'
 import type { GlobalSettings } from '../../../../../shared/global-settings-types'
 
 import {
@@ -16,6 +16,7 @@ import { SearchableSetting } from '../section-layout/SearchableSetting'
 import { CodeHostSetupSteps } from './TaskSourceCodeHostSetup'
 import { JiraSetupSteps } from './TaskSourceJiraSetup'
 import { TaskSourceLinearSetup } from './TaskSourceLinearSetup'
+import { PlaneSetupSteps } from '@/components/plane/PlaneSetupSteps'
 import { TaskSourceProviderCard } from './TaskSourceProviderCard'
 import {
   getStalledVisibleTaskProviders,
@@ -92,6 +93,18 @@ const PROVIDER_META: Record<
       )
     },
     Icon: ({ className }) => <JiraIcon className={className} />
+  },
+  plane: {
+    get label() {
+      return translate('plane.provider.label', 'Plane')
+    },
+    get description() {
+      return translate(
+        'plane.provider.description',
+        'Connect Plane Cloud and browse work items in Tasks.'
+      )
+    },
+    Icon: ({ className }) => <Plane className={className} />
   }
 }
 
@@ -219,6 +232,14 @@ export function TasksPane({ settings, updateSettings }: TasksPaneProps): React.J
                   onToggleVisible={() => toggleProvider('jira')}
                   onConnected={() => void checkJiraConnection()}
                   onOpenIntegrations={() => openIntegrations(JIRA_INTEGRATION_SECTION_ID)}
+                />
+              ) : provider === 'plane' ? (
+                <PlaneSetupSteps
+                  connected={readiness.connected}
+                  checking={readiness.checking}
+                  visible={visible}
+                  canHide={canHide}
+                  onToggleVisible={() => toggleProvider('plane')}
                 />
               ) : (
                 <CodeHostSetupSteps

@@ -42,6 +42,7 @@ const PROVIDER_LABELS: Record<WorkspaceDetailLink['provider'], string> = {
   gitlab: 'GitLab',
   linear: 'Linear',
   jira: 'Jira',
+  plane: 'Plane',
   bitbucket: 'Bitbucket',
   'azure-devops': 'Azure DevOps',
   gitea: 'Gitea'

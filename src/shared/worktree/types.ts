@@ -21,7 +21,15 @@ export type WorkspaceAttachmentOrigin = {
 }
 
 export type WorkspaceAttachment = {
-  provider: 'github' | 'gitlab' | 'linear' | 'jira' | 'bitbucket' | 'azure-devops' | 'gitea'
+  provider:
+    | 'github'
+    | 'gitlab'
+    | 'linear'
+    | 'jira'
+    | 'plane'
+    | 'bitbucket'
+    | 'azure-devops'
+    | 'gitea'
   type: 'issue' | 'pr' | 'mr'
   number: number
   identifier?: string
@@ -37,13 +45,15 @@ export type WorkspaceAttachment = {
 }
 
 export type WorkspaceLinkedItem = {
-  provider: 'github' | 'gitlab' | 'linear' | 'jira'
+  provider: 'github' | 'gitlab' | 'linear' | 'jira' | 'plane'
   type: 'issue' | 'pr' | 'mr'
   number: number
   title: string
   url: string
   linearIdentifier?: string
   jiraIdentifier?: string
+  /** Provider-native key for providers without a dedicated field, such as Plane `PROJ-142`. */
+  identifier?: string
   repoId?: string
 }
 

@@ -24809,5 +24809,119 @@
       "dismiss": "Dismiss",
       "cancelDownload": "Cancel download"
     }
+  },
+  "plane": {
+    "tasks": {
+      "commentFailed": "Could not post the comment.",
+      "commentPlaceholder": "Add a comment…",
+      "comment": "Comment",
+      "projectLabel": "Plane project",
+      "priority": "Priority",
+      "updateFailed": "Could not update the work item.",
+      "state": "State",
+      "assignee": "Assignee",
+      "unassigned": "Unassigned",
+      "loadFailed": "Unable to load Plane work items.",
+      "keyCopied": "Key copied",
+      "copyFailed": "Could not copy",
+      "back": "Plane list",
+      "copyKey": "Copy key",
+      "open": "Open in Plane",
+      "startWorkspace": "Start workspace",
+      "noDescription": "No description.",
+      "otherWorkspace": "That work item belongs to another Plane workspace ({{slug}}).",
+      "invalidReference": "Enter a work item key like PROJ-142 or a Plane URL.",
+      "openByReference": "Open by key or URL…",
+      "notConnected": "Connect Plane to browse your work items.",
+      "allProjects": "All projects",
+      "filterLabel": "Plane work item filter",
+      "assigned": "Assigned",
+      "created": "Created",
+      "allOpen": "All open",
+      "all": "All",
+      "newItem": "New work item",
+      "refresh": "Refresh",
+      "empty": "No work items found.",
+      "viewLabel": "Plane view",
+      "viewList": "List",
+      "viewBoard": "Board"
+    },
+    "connect": {
+      "failed": "Connection failed.",
+      "title": "Connect Plane",
+      "description": "Use your Plane Cloud workspace slug and a personal API key to browse work items.",
+      "workspaceSlug": "Workspace slug",
+      "workspaceSlugHint": "The first part of your Plane URL: app.plane.so/<slug>/",
+      "apiKey": "API key",
+      "storageHint": "Create it in Plane under Profile settings → Personal access tokens. It is stored encrypted on this device, never inside your repositories.",
+      "cancel": "Cancel",
+      "submit": "Connect",
+      "workspaceSlugPlaceholder": "my-team"
+    },
+    "create": {
+      "failed": "Could not create the work item.",
+      "title": "New Plane work item",
+      "description": "Create a work item in one of your projects.",
+      "titleLabel": "Title",
+      "descriptionLabel": "Description",
+      "submit": "Create",
+      "subTitle": "New sub-work item of"
+    },
+    "setup": {
+      "connectTitle": "Connect Plane",
+      "connectedDescription": "Connected to workspace {{slug}}.",
+      "connectDescription": "Add your Plane Cloud workspace and a personal API key.",
+      "disconnect": "Disconnect",
+      "add": "Add Plane access",
+      "agentWritesTitle": "Agent writes",
+      "agentWritesDescription": "Controls changes agents make to Plane through the orca CLI. Reading is always allowed.",
+      "agentWritesConfirm": "Ask each time",
+      "agentWritesAllow": "Allow",
+      "agentWritesDeny": "Block"
+    },
+    "provider": {
+      "label": "Plane",
+      "description": "Connect Plane Cloud and browse work items in Tasks."
+    },
+    "workspace": {
+      "linkedPlane": "Linked Plane {{value0}}"
+    },
+    "board": {
+      "showMore": "Show more",
+      "noCycle": "No cycle",
+      "allWorkItems": "All work items",
+      "search": "Search work items",
+      "mine": "Assigned to me",
+      "groupBy": "Group by",
+      "groupCycle": "Cycle",
+      "groupPriority": "Priority",
+      "groupNone": "No grouping",
+      "truncated": "Showing the most recent work items only.",
+      "pickProject": "Select a project to see its board."
+    },
+    "detail": {
+      "comments": "Comments",
+      "labels": "Labels",
+      "editLabels": "Edit labels",
+      "startDate": "Start date",
+      "dueDate": "Due date",
+      "cycle": "Cycle",
+      "subIssues": "Sub-work items",
+      "addSubIssue": "Add sub-work item",
+      "relations": "Relations"
+    },
+    "relation": {
+      "blocking": "Blocking",
+      "blockedBy": "Blocked by",
+      "duplicate": "Duplicate of",
+      "relatesTo": "Related to",
+      "remove": "Remove relation",
+      "failed": "Could not update the relation.",
+      "otherProjects": "in other projects",
+      "type": "Relation type",
+      "keyPlaceholder": "PROJ-142",
+      "keyLabel": "Work item key",
+      "add": "Add"
+    }
   }
 }

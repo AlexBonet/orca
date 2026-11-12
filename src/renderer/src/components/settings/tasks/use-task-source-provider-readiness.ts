@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
 import {
   GLOBAL_AGENT_SKILL_SOURCE_KINDS,
   useInstalledAgentSkillNames
@@ -28,10 +28,18 @@ export function useTaskSourceProviderReadiness(
   const jiraStatus = useAppStore((s) => s.jiraStatus)
   const jiraStatusChecked = useAppStore((s) => s.jiraStatusChecked)
   const jiraStatusContextKey = useAppStore((s) => s.jiraStatusContextKey)
+  const planeConnected = useAppStore((s) => s.planeStatus.connected)
+  const planeStatusChecked = useAppStore((s) => s.planeStatusChecked)
+  const planeStatusContextKey = useAppStore((s) => s.planeStatusContextKey)
+  const checkPlaneConnection = useAppStore((s) => s.checkPlaneConnection)
   const linearConnected = useLinearProviderConnected()
   const linearStatusChecked = useAppStore((s) => s.linearStatusChecked)
   const linearStatusContextKey = useAppStore((s) => s.linearStatusContextKey)
   const providerRuntimeContextKey = getProviderRuntimeContextKey(settings)
+  // Plane status lives on the active runtime host, so it is re-read when the host changes.
+  useEffect(() => {
+    void checkPlaneConnection()
+  }, [checkPlaneConnection, providerRuntimeContextKey])
   const activeSkillRuntime = useActiveProjectSkillRuntime()
 
   const {
@@ -91,6 +99,11 @@ export function useTaskSourceProviderReadiness(
         connected: jiraConnected,
         checking: jiraChecking,
         visible: visible.has('jira')
+      },
+      plane: {
+        connected: planeConnected,
+        checking: planeStatusContextKey !== providerRuntimeContextKey || !planeStatusChecked,
+        visible: visible.has('plane')
       }
     }
   }, [
@@ -104,6 +117,10 @@ export function useTaskSourceProviderReadiness(
     linearSkillLoading,
     linearSkillSettled,
     linearSkillUnverifiable,
+    planeConnected,
+    planeStatusChecked,
+    planeStatusContextKey,
+    providerRuntimeContextKey,
     reviewChecking,
     reviewUnavailable,
     visibleProvidersKey
