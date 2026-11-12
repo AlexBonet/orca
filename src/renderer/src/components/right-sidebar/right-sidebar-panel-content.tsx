@@ -14,7 +14,6 @@ const FolderWorkspaceWorktreesPanel = lazy(() => import('./FolderWorkspaceWorktr
 const FolderWorkspacePrChecksPanel = lazy(
   () => import('./hosted-review/folder-checks/FolderWorkspacePrChecksPanel')
 )
-const FolderWorkspaceReposPanel = lazy(() => import('./FolderWorkspaceReposPanel'))
 const PluginPanel = lazy(() => import('./plugin-panels/PluginPanel'))
 
 type RightSidebarPanelContentProps = {
@@ -59,7 +58,6 @@ export function RightSidebarPanelContent({
           />
         )}
         {effectiveTab === 'workspaces' && <FolderWorkspaceWorktreesPanel />}
-        {effectiveTab === 'repos' && <FolderWorkspaceReposPanel />}
         {effectiveTab === 'pr-checks' && (
           <FolderWorkspacePrChecksPanel
             isVisible={rightSidebarOpen && effectiveTab === 'pr-checks'}

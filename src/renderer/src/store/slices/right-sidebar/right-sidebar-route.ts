@@ -38,7 +38,6 @@ export function normalizeRightSidebarRoute(
     tab === 'explorer' ||
     tab === 'vault' ||
     tab === 'workspaces' ||
-    tab === 'repos' ||
     tab === 'pr-checks' ||
     tab === 'source-control' ||
     tab === 'checks' ||

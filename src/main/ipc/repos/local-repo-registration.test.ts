@@ -66,6 +66,17 @@ describe('addLocalRepoFromPath for a subfolder of a Git repository', () => {
     expect(repos).toHaveLength(1)
     expect(repos[0]?.path).toBe(join(root, 'workspace'))
   })
+
+  it('marks a folder opened at a Git root so it is not auto-upgraded, but not a subfolder', async () => {
+    const repos: Repo[] = []
+    const store = createStore(repos)
+
+    await addLocalRepoFromPath(store, root, 'folder')
+    await addLocalRepoFromPath(store, join(root, 'workspace'), 'folder')
+
+    expect(repos.find((repo) => repo.path === root)?.keepAsFolder).toBe(true)
+    expect(repos.find((repo) => repo.path !== root)?.keepAsFolder).toBeUndefined()
+  })
 })
 
 describe('addLocalRepoFromPath through a symlink alias', () => {

@@ -46,6 +46,7 @@ const rejectedMarkers = new Map<string, string>()
 function isUpgradeCandidate(repo: Repo): boolean {
   return (
     isFolderRepo(repo) &&
+    !repo.keepAsFolder &&
     !repo.connectionId &&
     getRepoExecutionHostId(repo) === LOCAL_EXECUTION_HOST_ID &&
     !isWslUncPath(repo.path)

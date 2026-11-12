@@ -1,3 +1,5 @@
+import { stat } from 'node:fs/promises'
+import { join } from 'node:path'
 import type { Store } from '../../persistence/loading-store/store'
 import type { Repo } from '../../../shared/repo-types'
 import { isFolderRepo } from '../../../shared/repo-kind'
@@ -15,6 +17,13 @@ import { detectRepoLocalMetadata } from '../../repository-icons/repo-icon-autode
 import { prepareLocalWorktreeRootForRepo } from '../../workspaces/creation/worktree-root-preparation'
 import { describeWslUncAccessDenied } from '../../wsl/filesystem/wsl-unc-access-denied'
 import { createLocalProjectRecord } from '../../workspaces/catalog/local-project-record'
+
+async function hasGitMarker(dir: string): Promise<boolean> {
+  return stat(join(dir, '.git')).then(
+    () => true,
+    () => false
+  )
+}
 
 export async function addLocalRepoFromPath(
   store: Store,
@@ -117,7 +126,8 @@ export async function addLocalRepoFromPath(
     path: resolvedPath,
     displayName: displayName?.trim() || getRepoName(resolvedPath),
     kind: repoKind,
-    detected
+    detected,
+    keepAsFolder: repoKind === 'folder' && (await hasGitMarker(resolvedPath))
   })
 
   store.addRepo(repo)

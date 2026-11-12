@@ -52,6 +52,8 @@ export type Repo = {
   kind?: RepoKind
   /** Git root proven during folder upgrade; keeps the original checkout locator stable. */
   folderUpgradeGitRootPath?: string
+  /** Folder project opened on purpose at a Git root; the auto-upgrade to Git must leave it alone. */
+  keepAsFolder?: boolean
   gitUsername?: string
   worktreeBaseRef?: string
   /** Optional repo-scoped workspace root override. Relative paths resolve from `path`. */

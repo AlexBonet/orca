@@ -7,6 +7,7 @@ export function createLocalProjectRecord(input: {
   kind: RepoKind
   displayName: string
   detected?: Pick<Repo, 'repoIcon' | 'gitRemoteIdentity' | 'upstream'>
+  keepAsFolder?: boolean
 }): Repo {
   return {
     id: randomUUID(),
@@ -16,6 +17,7 @@ export function createLocalProjectRecord(input: {
     ...input.detected,
     addedAt: Date.now(),
     kind: input.kind,
+    ...(input.keepAsFolder ? { keepAsFolder: true } : {}),
     ...(input.kind === 'git'
       ? {
           externalWorktreeVisibilityLegacy: false,

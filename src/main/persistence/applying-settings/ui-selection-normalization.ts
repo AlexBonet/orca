@@ -65,7 +65,6 @@ export function normalizeRightSidebarTab(tab: unknown): PersistedState['ui']['ri
     tab === 'search' ||
     tab === 'vault' ||
     tab === 'workspaces' ||
-    tab === 'repos' ||
     tab === 'pr-checks' ||
     tab === 'source-control' ||
     tab === 'checks' ||
