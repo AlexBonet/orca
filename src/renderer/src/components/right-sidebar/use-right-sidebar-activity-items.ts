@@ -50,7 +50,8 @@ export function useRightSidebarActivityItems({
   const activeRepo = useRepoById(activeWorktree?.repoId ?? null)
   const activeWorkspaceScope = parseWorkspaceKey(activeWorktreeId ?? '')
   const isFolderWorkspace = activeWorkspaceScope?.type === 'folder'
-  const isFolder = isFolderWorkspace || (activeRepo ? isFolderRepo(activeRepo) : false)
+  const isFolderProject = activeRepo ? isFolderRepo(activeRepo) : false
+  const isFolder = isFolderWorkspace || isFolderProject
   // Why the owner: a managed server's workspace names its server, not an SSH connection.
   const hasSshHost = useAppStore((s) =>
     portsPanelReachesSshHost(
@@ -112,7 +113,8 @@ export function useRightSidebarActivityItems({
         icon: GitBranch,
         title: t('auto.components.right.sidebar.index.0314901467', 'Source Control'),
         shortcut: sourceControlShortcut === 'Unassigned' ? '' : sourceControlShortcut,
-        gitOnly: true
+        gitOnly: true,
+        showInFolderProject: true
       },
       {
         id: 'checks',
@@ -148,10 +150,11 @@ export function useRightSidebarActivityItems({
     () =>
       getVisibleRightSidebarActivityItems(activityItems, {
         isFolder,
+        isFolderProject,
         isFolderWorkspace,
         hasSshHost
       }),
-    [activityItems, isFolder, isFolderWorkspace, hasSshHost]
+    [activityItems, isFolder, isFolderProject, isFolderWorkspace, hasSshHost]
   )
 
   const activeFolderWorkspaceKey = isFolderWorkspace ? (activeWorktreeId ?? null) : null

@@ -1,5 +1,11 @@
 import React from 'react'
+import { useActiveWorktree } from '@/store/workspaces/selection/use-selected-worktree'
+import { useRepoById } from '@/store/repos/use-repository-catalog'
+import { isFolderRepo } from '../../../../../../shared/repo-kind'
+import { lazyWithRetry as lazy } from '@/app-shell/startup/lazy-with-retry'
 import { SourceControlPanel } from './panel'
+
+const FolderProjectSourceControlPanel = lazy(() => import('../../FolderProjectSourceControlPanel'))
 
 import '../review/hosted-review-header-chrome'
 
@@ -18,7 +24,13 @@ import '../sync/remote-refresh'
 import '../ai/text-generation-defaults'
 
 function SourceControlInner(): React.JSX.Element {
-  return <SourceControlPanel />
+  const activeWorktree = useActiveWorktree()
+  const activeRepo = useRepoById(activeWorktree?.repoId ?? null)
+  return activeRepo && isFolderRepo(activeRepo) ? (
+    <FolderProjectSourceControlPanel />
+  ) : (
+    <SourceControlPanel />
+  )
 }
 const SourceControl = React.memo(SourceControlInner)
 export default SourceControl
