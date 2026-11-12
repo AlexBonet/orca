@@ -63,6 +63,8 @@ const NonGitFolderDialog = React.memo(function NonGitFolderDialog() {
   const activeModal = useAppStore((s) => s.activeModal)
   const modalData = useAppStore((s) => s.modalData)
   const closeModal = useAppStore((s) => s.closeModal)
+  const addRepoPath = useAppStore((s) => s.addRepoPath)
+  const fetchWorktrees = useAppStore((s) => s.fetchWorktrees)
   const addNonGitFolder = useAppStore((s) => s.addNonGitFolder)
   const runtimeEnvironments = useAppStore((s) => s.runtimeEnvironments)
 
@@ -73,6 +75,7 @@ const NonGitFolderDialog = React.memo(function NonGitFolderDialog() {
     typeof modalData.runtimeEnvironmentId === 'string' ? modalData.runtimeEnvironmentId : ''
   const displayName = typeof modalData.displayName === 'string' ? modalData.displayName.trim() : ''
   const insideGitRoot = typeof modalData.insideGitRoot === 'string' ? modalData.insideGitRoot : ''
+  const containsRepos = typeof modalData.containsRepos === 'number' ? modalData.containsRepos : 0
   const runtimeEnvironmentName =
     runtimeEnvironmentId &&
     (runtimeEnvironments.find((environment) => environment.id === runtimeEnvironmentId)?.name ||
@@ -145,6 +148,16 @@ const NonGitFolderDialog = React.memo(function NonGitFolderDialog() {
     closeModal()
   }, [addNonGitFolder, closeModal, displayName, folderPath, connectionId, runtimeEnvironmentId])
 
+  const handleOpenAsGitRepository = useCallback(() => {
+    closeModal()
+    void (async () => {
+      const repo = await addRepoPath(folderPath, 'git', displayName ? { displayName } : undefined)
+      if (repo) {
+        await fetchWorktrees(repo.id)
+      }
+    })()
+  }, [addRepoPath, closeModal, displayName, fetchWorktrees, folderPath])
+
   const handleOpenChange = useCallback(
     (open: boolean) => {
       if (!open) {
@@ -162,16 +175,22 @@ const NonGitFolderDialog = React.memo(function NonGitFolderDialog() {
             {t('auto.components.sidebar.NonGitFolderDialog.e52454b7f6', 'Open as Folder')}
           </DialogTitle>
           <DialogDescription className="text-xs">
-            {insideGitRoot
+            {containsRepos > 0
               ? t(
-                  'auto.components.sidebar.NonGitFolderDialog.insideGitRoot',
-                  'This folder is inside the Git repository {{root}}. It will open as a plain folder without Git features. To use Git here, add the repository folder instead.',
-                  { root: insideGitRoot }
+                  'auto.components.sidebar.NonGitFolderDialog.containsRepos',
+                  'This folder is a Git repository and also holds {{count}} other repositories. Open it as a folder to see all of them in Source Control, or as a repository to work with its worktrees.',
+                  { count: containsRepos }
                 )
-              : t(
-                  'auto.components.sidebar.NonGitFolderDialog.8fba4b8cbb',
-                  "This folder isn't a Git repository. You'll have the editor, terminal, and search, but Git-based features won't be available."
-                )}
+              : insideGitRoot
+                ? t(
+                    'auto.components.sidebar.NonGitFolderDialog.insideGitRoot',
+                    'This folder is inside the Git repository {{root}}. It will open as a plain folder without Git features. To use Git here, add the repository folder instead.',
+                    { root: insideGitRoot }
+                  )
+                : t(
+                    'auto.components.sidebar.NonGitFolderDialog.8fba4b8cbb',
+                    "This folder isn't a Git repository. You'll have the editor, terminal, and search, but Git-based features won't be available."
+                  )}
             <span className="mt-2 block">{checkedHostDescription}</span>
           </DialogDescription>
         </DialogHeader>
@@ -186,6 +205,14 @@ const NonGitFolderDialog = React.memo(function NonGitFolderDialog() {
           <Button variant="outline" onClick={() => handleOpenChange(false)}>
             {t('auto.components.sidebar.NonGitFolderDialog.05b33a17a9', 'Cancel')}
           </Button>
+          {containsRepos > 0 && (
+            <Button variant="outline" onClick={handleOpenAsGitRepository}>
+              {t(
+                'auto.components.sidebar.NonGitFolderDialog.openAsGitRepository',
+                'Open as Git Repository'
+              )}
+            </Button>
+          )}
           <Button onClick={handleConfirm}>
             {t('auto.components.sidebar.NonGitFolderDialog.e52454b7f6', 'Open as Folder')}
           </Button>

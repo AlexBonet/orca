@@ -1,11 +1,7 @@
 import { useCallback, useEffect, useRef } from 'react'
 import { toast } from 'sonner'
-import { track } from '@/diagnostics/telemetry/telemetry'
 import { isGitRepoKind } from '../../../../../../shared/repo-kind'
-import {
-  buildNestedRepoScanTelemetry,
-  createNestedRepoTelemetryAttemptId
-} from '../../../../../../shared/nested-repo-telemetry'
+import { createNestedRepoTelemetryAttemptId } from '../../../../../../shared/nested-repo-telemetry'
 import type { AddRepoExistingWorkspaceSource } from '../../../../../../shared/telemetry-events'
 import type { Repo } from '../../../../../../shared/repo-types'
 import type { WorktreeFetchOptions } from '@/store/slices/worktrees/listing/worktree-fetch-options'
@@ -18,6 +14,8 @@ import { worktreeRefreshOptions } from '../host-selection/add-repo-runtime-owner
 import type { ExecutionHostId } from '../../../../../../shared/execution-host'
 import { addRepoBusyLabels } from './add-repo-busy-labels'
 import { showSkippedBatchFoldersToast } from '../completion/add-repo-skipped-folders-toast'
+import { promptWhenGitRepoHoldsRepos } from './git-repo-nested-repos-probe'
+import { trackLocalNestedScanResult } from './track-local-nested-scan-result'
 
 type LocalPathAddResult =
   | { status: 'completed'; repo: Repo }
@@ -131,15 +129,7 @@ export function useAddRepoLocalFolderFlow({
           return { status: 'cancelled' }
         }
         clearNestedScanState()
-        track(
-          'add_repo_nested_scan_result',
-          buildNestedRepoScanTelemetry({
-            attemptId,
-            surface: 'sidebar',
-            runtimeKind: 'local',
-            scan
-          })
-        )
+        trackLocalNestedScanResult(attemptId, scan)
         if (scan?.selectedPathKind === 'non_git_folder' && mode === 'batch') {
           return { status: 'skipped' }
         }
@@ -161,6 +151,17 @@ export function useAddRepoLocalFolderFlow({
           closeModal()
           openModal('confirm-non-git-folder', { folderPath: path })
           return { status: 'paused' }
+        }
+        if (scan?.selectedPathKind === 'git_repo' && mode === 'single') {
+          const prompt = await promptWhenGitRepoHoldsRepos({
+            path,
+            openModal,
+            closeModal,
+            isCurrent: () => gen === localAddGenRef.current
+          })
+          if (prompt !== 'none') {
+            return { status: prompt === 'prompted' ? 'paused' : 'cancelled' }
+          }
         }
         setAddProjectBusyLabel(addRepoBusyLabels.openingProject())
         const repo = await addRepoPath(path, undefined, {

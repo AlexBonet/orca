@@ -19,7 +19,10 @@ export function useFolderProjectSubRepos(
     let cancelled = false
     const scan = (): void => {
       window.api.projectGroups
-        .scanNested({ path: folderPath, options: { maxDepth: SUB_REPO_SCAN_DEPTH } })
+        .scanNested({
+          path: folderPath,
+          options: { maxDepth: SUB_REPO_SCAN_DEPTH, scanInsideGitRepo: true }
+        })
         .then((result) => {
           if (cancelled) {
             return

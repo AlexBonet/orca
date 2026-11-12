@@ -89,6 +89,23 @@ describe('scanNestedRepos', () => {
     expect(result.repos.map((repo) => repo.path)).toEqual(['/workspace/api'])
   })
 
+  it('stops at a repository root unless asked to scan inside it, ignoring its .gitignore then', async () => {
+    const directories = new Map([['/ws', ['api', 'tools']]])
+    const gitRepos = new Set(['/ws', '/ws/api', '/ws/tools'])
+    const files = new Map([['/ws/.gitignore', 'api/\ntools/\n']])
+    const filesystem = posixTestFilesystem({ directories, gitRepos, files })
+
+    const stopped = await scanNestedRepos({ path: '/ws', filesystem })
+    const inside = await scanNestedRepos({
+      path: '/ws',
+      options: { scanInsideGitRepo: true },
+      filesystem
+    })
+
+    expect(stopped).toMatchObject({ selectedPathKind: 'git_repo', repos: [] })
+    expect(inside.repos.map((repo) => repo.path)).toEqual(['/ws/api', '/ws/tools'])
+  })
+
   it.skipIf(process.platform === 'win32')(
     'does not follow symlinked directories outside the selected folder',
     async () => {
