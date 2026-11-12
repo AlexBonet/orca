@@ -96,7 +96,7 @@ export function useRightSidebarActivityItems({
       {
         id: 'repos',
         icon: GitBranch,
-        title: translate('auto.components.right.sidebar.index.folderRepos', 'Repos'),
+        title: t('auto.components.right.sidebar.index.folderRepos', 'Repos'),
         shortcut: '',
         folderOnly: true
       },

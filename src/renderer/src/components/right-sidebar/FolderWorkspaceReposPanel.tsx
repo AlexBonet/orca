@@ -2,8 +2,11 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { ArrowDown, ArrowUp, GitBranch, RefreshCw } from 'lucide-react'
 import { useAppStore } from '@/store'
 import { translate } from '@/i18n/i18n'
-import { activateAndRevealWorktree } from '@/lib/worktree-activation'
-import { selectFolderWorkspaces, selectWorktreesByRepo } from '@/store/workspace-record-selectors'
+import { activateAndRevealWorktree } from '@/lib/workspace/activation/worktree-activation'
+import {
+  selectFolderWorkspaces,
+  selectWorktreesByRepo
+} from '@/store/workspaces/catalog/workspace-record-fields'
 import { parseWorkspaceKey } from '../../../../shared/workspace-scope'
 import { getGitReposInsideFolder } from './folder-workspace-nested-repos'
 
@@ -101,7 +104,10 @@ export default function FolderWorkspaceReposPanel(): React.JSX.Element {
             {translate(
               'auto.components.rightSidebar.FolderWorkspaceReposPanel.count',
               '{{count}} Git repos inside this folder',
-              { count: nestedRepos.length, defaultValue_one: '{{count}} Git repo inside this folder' }
+              {
+                count: nestedRepos.length,
+                defaultValue_one: '{{count}} Git repo inside this folder'
+              }
             )}
           </div>
         </div>
@@ -109,7 +115,10 @@ export default function FolderWorkspaceReposPanel(): React.JSX.Element {
           type="button"
           className="rounded p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
           onClick={() => void refresh()}
-          aria-label={translate('auto.components.rightSidebar.FolderWorkspaceReposPanel.refresh', 'Refresh')}
+          aria-label={translate(
+            'auto.components.rightSidebar.FolderWorkspaceReposPanel.refresh',
+            'Refresh'
+          )}
         >
           <RefreshCw className={`size-3.5 ${refreshing ? 'animate-spin' : ''}`} />
         </button>
@@ -150,7 +159,9 @@ export default function FolderWorkspaceReposPanel(): React.JSX.Element {
                   <span className="flex items-center gap-3 text-xs text-muted-foreground">
                     <span className="flex min-w-0 items-center gap-1">
                       <GitBranch className="size-3 shrink-0" />
-                      <span className="truncate">{summary?.branch ?? (summary?.error ? '—' : '…')}</span>
+                      <span className="truncate">
+                        {summary?.branch ?? (summary?.error ? '—' : '…')}
+                      </span>
                     </span>
                     {summary && !summary.error ? (
                       <>
