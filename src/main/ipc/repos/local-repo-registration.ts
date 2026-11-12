@@ -3,6 +3,7 @@ import type { Repo } from '../../../shared/repo-types'
 import { isFolderRepo } from '../../../shared/repo-kind'
 import { normalizeRuntimePathForComparison } from '../../../shared/cross-platform-path'
 import { awaitWindowsHostGitEnvironmentReady } from '../../git/runner'
+import { isStrictSubfolderOfGitRoot } from '../../git/repo-subfolder-detection'
 import {
   inspectGitRepoForRegistrationAsync,
   getGitRepoRootAsync,
@@ -34,8 +35,14 @@ export async function addLocalRepoFromPath(
     }
   }
 
-  const resolvedPath = gitInfo?.rootPath ?? path
   const pathKey = normalizeRuntimePathForComparison(path)
+  if (gitInfo && (await isStrictSubfolderOfGitRoot(path, gitInfo.rootPath))) {
+    return {
+      error: `${path} is inside the Git repository ${gitInfo.rootPath}. Add it as a folder, or add the repository root instead.`
+    }
+  }
+
+  const resolvedPath = gitInfo?.rootPath ?? path
   const existing = store
     .getRepos()
     .find((repo) => !repo.connectionId && normalizeRuntimePathForComparison(repo.path) === pathKey)

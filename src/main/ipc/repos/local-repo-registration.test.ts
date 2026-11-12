@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process'
 import { mkdir, mkdtemp, rm, symlink } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -25,6 +26,47 @@ function createStore(repos: Repo[]): Store {
   // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: addLocalRepoFromPath only calls getRepos/addRepo.
   return store as unknown as Store
 }
+
+describe('addLocalRepoFromPath for a subfolder of a Git repository', () => {
+  let root: string
+
+  beforeEach(async () => {
+    root = await mkdtemp(join(tmpdir(), 'orca-local-add-subfolder-'))
+    execFileSync('git', ['init', '-q'], { cwd: root })
+    await mkdir(join(root, 'workspace'))
+  })
+
+  afterEach(async () => {
+    await rm(root, { recursive: true, force: true })
+  })
+
+  it('refuses to register a subfolder as its enclosing repository', async () => {
+    const repos: Repo[] = []
+
+    const result = await addLocalRepoFromPath(createStore(repos), join(root, 'workspace'), 'git')
+
+    expect(result).toHaveProperty('error')
+    expect(repos).toHaveLength(0)
+  })
+
+  it('still registers the repository root as a Git project', async () => {
+    const repos: Repo[] = []
+
+    const result = await addLocalRepoFromPath(createStore(repos), root, 'git')
+
+    expect(result).toHaveProperty('repo')
+    expect(repos).toHaveLength(1)
+  })
+
+  it('registers the same subfolder as a plain folder', async () => {
+    const repos: Repo[] = []
+
+    await addLocalRepoFromPath(createStore(repos), join(root, 'workspace'), 'folder')
+
+    expect(repos).toHaveLength(1)
+    expect(repos[0]?.path).toBe(join(root, 'workspace'))
+  })
+})
 
 describe('addLocalRepoFromPath through a symlink alias', () => {
   let root: string

@@ -14,6 +14,7 @@ import { getEffectiveHostSetting } from '../../../shared/host-setting-overrides'
 import { probeGitAvailability } from '../../git/git-availability'
 import { awaitWindowsHostGitEnvironmentReady, gitExecFileAsync } from '../../git/runner'
 import { inspectGitRepoForRegistrationAsync } from '../../git/repo'
+import { isStrictSubfolderOfGitRoot } from '../../git/repo-subfolder-detection'
 import { getClonePathComparisonKey, getSavedProjectPathKeys } from '../../git/repo-clone-path'
 import { detectRepoLocalMetadata } from '../../repository-icons/repo-icon-autodetect'
 import { prepareLocalWorktreeRootForRepo } from '../../workspaces/creation/worktree-root-preparation'
@@ -67,10 +68,8 @@ export function registerRepoCreationHandlers(
         return { rootPath: null }
       }
       // Why: only a strict subfolder needs a choice; picking the repo root keeps the normal Git flow.
-      const isRoot =
-        normalizeRuntimePathForComparison(info.rootPath) ===
-        normalizeRuntimePathForComparison(args.path)
-      return { rootPath: isRoot ? null : info.rootPath }
+      const isSubfolder = await isStrictSubfolderOfGitRoot(args.path, info.rootPath)
+      return { rootPath: isSubfolder ? info.rootPath : null }
     }
   )
   ipcMain.handle('repos:getDefaultCreateProjectParent', () => getDefaultCreateProjectParent(store))
