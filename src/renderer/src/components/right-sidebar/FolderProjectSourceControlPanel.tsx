@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { GitBranch } from 'lucide-react'
 import { useAppStore } from '@/store'
 import { translate } from '@/i18n/i18n'
@@ -62,7 +62,9 @@ export default function FolderProjectSourceControlPanel(): React.JSX.Element {
   const isLocal = activeRepo !== null && activeRepo !== undefined && !activeRepo.connectionId
   const folderPath = isLocal ? (activeRepo?.path ?? null) : null
 
-  const { repos, loading } = useFolderProjectSubRepos(folderPath, isLocal)
+  const rootName = activeRepo?.keepAsFolder ? activeRepo.displayName : null
+  const rootRepo = useMemo(() => (rootName === null ? null : { name: rootName }), [rootName])
+  const { repos, loading } = useFolderProjectSubRepos(folderPath, isLocal, rootRepo)
   const { snapshots, refreshRepo } = useFolderProjectRepoStatus(repos, isLocal)
   const [selectedPath, setSelectedPath] = useState<string | null>(null)
   const [historyCollapsed, setHistoryCollapsed] = useState(false)
@@ -133,6 +135,7 @@ export default function FolderProjectSourceControlPanel(): React.JSX.Element {
           <RepoChanges
             key={repo.path}
             repo={repo}
+            projectRepo={activeRepo}
             snapshot={snapshots[repo.path]}
             onChanged={() => refreshRepo(repo.path)}
             onOpen={openEntry}

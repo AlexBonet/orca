@@ -3,16 +3,19 @@ import {
   Check,
   ChevronDown,
   ChevronRight,
-  CloudUpload,
   Download,
+  GitPullRequest,
   Minus,
-  Plus,
-  RefreshCw,
-  Undo2
+  Plus
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
-import { Textarea } from '@/components/ui/textarea'
+import { CommitMessageComposer } from './source-control/commit/commit-message-composer'
+import { useFolderProjectCommitMessage } from './use-folder-project-commit-message'
+import { FolderProjectBranchPicker } from './FolderProjectBranchPicker'
+import { FileRow, SyncButton } from './FolderProjectRepoRows'
+import { FolderProjectPullRequestDialog } from './FolderProjectPullRequestDialog'
+import type { Repo } from '../../../../shared/repo-types'
 import {
   Dialog,
   DialogContent,
@@ -22,11 +25,7 @@ import {
   DialogTitle
 } from '@/components/ui/dialog'
 import { translate } from '@/i18n/i18n'
-import type {
-  GitFileStatus,
-  GitStatusEntry,
-  GitUpstreamStatus
-} from '../../../../shared/git/status/git-status-types'
+import type { GitStatusEntry } from '../../../../shared/git/status/git-status-types'
 import type { FolderProjectSubRepo } from './folder-project-sub-repos'
 import {
   getFolderProjectBranchLabel,
@@ -34,132 +33,21 @@ import {
   type FolderProjectRepoOperation,
   type FolderProjectRepoSnapshot
 } from './folder-project-repo-git'
-import {
-  getFolderProjectRepoSyncAction,
-  type FolderProjectRepoSyncAction
-} from './folder-project-repo-sync-state'
+import { getFolderProjectRepoSyncAction } from './folder-project-repo-sync-state'
 
 const EMPTY_ENTRIES: GitStatusEntry[] = []
 
-const STATUS_LETTER: Record<GitFileStatus, string> = {
-  modified: 'M',
-  added: 'A',
-  deleted: 'D',
-  renamed: 'R',
-  untracked: 'U',
-  copied: 'C'
-}
-
-function splitPath(path: string): { name: string; dir: string } {
-  const index = path.lastIndexOf('/')
-  return index === -1
-    ? { name: path, dir: '' }
-    : { name: path.slice(index + 1), dir: path.slice(0, index) }
-}
-
 type RepoRunner = (operation: FolderProjectRepoOperation) => Promise<boolean>
-
-function FileRow({
-  entry,
-  onOpen,
-  onRun
-}: {
-  entry: GitStatusEntry
-  onOpen: (entry: GitStatusEntry) => void
-  onRun: (operation: FolderProjectRepoOperation) => void
-}): React.JSX.Element {
-  const { name, dir } = splitPath(entry.path)
-  const staged = entry.area === 'staged'
-  return (
-    <div
-      className="group flex items-center gap-1 px-3 py-0.5 text-xs hover:bg-accent/50"
-      title={entry.path}
-    >
-      <button
-        type="button"
-        className="flex min-w-0 flex-1 items-center gap-2 text-left"
-        onClick={() => onOpen(entry)}
-      >
-        <span className="min-w-0 truncate">{name}</span>
-        <span className="min-w-0 flex-1 truncate text-muted-foreground">{dir}</span>
-      </button>
-      <span className="hidden shrink-0 items-center group-hover:flex">
-        {staged ? null : (
-          <Button
-            variant="ghost"
-            size="icon-xs"
-            aria-label={translate(
-              'auto.components.right.sidebar.folderSourceControl.discard',
-              'Discard'
-            )}
-            onClick={() => onRun({ kind: 'discard', paths: [entry.path] })}
-          >
-            <Undo2 />
-          </Button>
-        )}
-        <Button
-          variant="ghost"
-          size="icon-xs"
-          aria-label={
-            staged
-              ? translate('auto.components.right.sidebar.folderSourceControl.unstage', 'Unstage')
-              : translate('auto.components.right.sidebar.folderSourceControl.stage', 'Stage')
-          }
-          onClick={() => onRun({ kind: staged ? 'unstage' : 'stage', paths: [entry.path] })}
-        >
-          {staged ? <Minus /> : <Plus />}
-        </Button>
-      </span>
-      <span className="w-3 shrink-0 text-center font-mono text-muted-foreground">
-        {STATUS_LETTER[entry.status]}
-      </span>
-    </div>
-  )
-}
-
-function SyncButton({
-  action,
-  upstream,
-  disabled,
-  onRun
-}: {
-  action: Exclude<FolderProjectRepoSyncAction, null>
-  upstream: GitUpstreamStatus | undefined
-  disabled: boolean
-  onRun: (operation: FolderProjectRepoOperation) => void
-}): React.JSX.Element {
-  const label =
-    action === 'publish'
-      ? translate('auto.components.right.sidebar.folderSourceControl.publish', 'Publish branch')
-      : action === 'pull'
-        ? translate('auto.components.right.sidebar.folderSourceControl.pull', 'Pull')
-        : action === 'push'
-          ? translate('auto.components.right.sidebar.folderSourceControl.push', 'Push')
-          : translate('auto.components.right.sidebar.folderSourceControl.sync', 'Sync changes')
-  return (
-    <Button
-      variant="ghost"
-      size="xs"
-      disabled={disabled}
-      aria-label={label}
-      title={label}
-      onClick={() => onRun({ kind: 'sync', action })}
-    >
-      {action === 'publish' ? <CloudUpload /> : <RefreshCw />}
-      {upstream?.hasUpstream ? (
-        <span className="tabular-nums">{`${upstream.behind}↓ ${upstream.ahead}↑`}</span>
-      ) : null}
-    </Button>
-  )
-}
 
 export function RepoChanges({
   repo,
+  projectRepo,
   snapshot,
   onChanged,
   onOpen
 }: {
   repo: FolderProjectSubRepo
+  projectRepo: Repo | null | undefined
   snapshot: FolderProjectRepoSnapshot | undefined
   onChanged: () => Promise<void>
   onOpen: (repo: FolderProjectSubRepo, entry: GitStatusEntry) => void
@@ -167,6 +55,7 @@ export function RepoChanges({
   const [collapsed, setCollapsed] = useState(false)
   const [message, setMessage] = useState('')
   const [busy, setBusy] = useState(false)
+  const [prOpen, setPrOpen] = useState(false)
   const [pendingDiscard, setPendingDiscard] = useState<string[] | null>(null)
   const entries = snapshot?.status.entries ?? EMPTY_ENTRIES
   const upstream = snapshot?.upstream
@@ -206,6 +95,15 @@ export function RepoChanges({
     }
   }
 
+  const ai = useFolderProjectCommitMessage({
+    repoPath: repo.path,
+    projectRepo,
+    stagedCount: staged.length,
+    hasMessage: message.length > 0,
+    busy,
+    onMessage: (generated) => setMessage((current) => (current.length > 0 ? current : generated))
+  })
+
   return (
     <div>
       <div className="flex items-center hover:bg-accent/50">
@@ -216,8 +114,33 @@ export function RepoChanges({
         >
           <Chevron className="size-3.5 shrink-0" />
           <span className="truncate">{repo.name}</span>
-          {branch ? <span className="truncate text-muted-foreground">{branch}</span> : null}
         </button>
+        {branch && projectRepo ? (
+          <FolderProjectBranchPicker
+            repoPath={repo.path}
+            repoName={repo.name}
+            projectRepoId={projectRepo.id}
+            branch={branch}
+            onSwitched={() => void onChanged()}
+          />
+        ) : null}
+        {branch ? (
+          <Button
+            variant="ghost"
+            size="icon-xs"
+            aria-label={translate(
+              'auto.components.right.sidebar.folderSourceControl.prTitle',
+              'Create pull request'
+            )}
+            title={translate(
+              'auto.components.right.sidebar.folderSourceControl.prTitle',
+              'Create pull request'
+            )}
+            onClick={() => setPrOpen(true)}
+          >
+            <GitPullRequest />
+          </Button>
+        ) : null}
         <Button
           variant="ghost"
           size="icon-xs"
@@ -238,22 +161,28 @@ export function RepoChanges({
       {collapsed ? null : (
         <>
           <div className="flex flex-col gap-1 px-3 py-1">
-            <Textarea
-              rows={2}
-              value={message}
-              placeholder={translate(
-                'auto.components.right.sidebar.folderSourceControl.commitPlaceholder',
-                'Message'
-              )}
-              className="min-h-0 resize-none text-xs"
-              onChange={(event) => setMessage(event.target.value)}
+            <div
               onKeyDown={(event) => {
                 if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
                   event.preventDefault()
                   void commit()
                 }
               }}
-            />
+            >
+              <CommitMessageComposer
+                rows={2}
+                commitMessage={message}
+                disabled={false}
+                onCommitMessageChange={setMessage}
+                describedBy=""
+                showGenerate={ai.showGenerate}
+                isGenerating={ai.isGenerating}
+                onCancelGenerate={ai.cancel}
+                isGenerateDisabled={ai.isGenerateDisabled}
+                onGenerate={ai.generate}
+                generateTooltip={ai.generateTooltip}
+              />
+            </div>
             <Button
               size="sm"
               disabled={busy || staged.length === 0 || message.trim().length === 0}
@@ -334,6 +263,18 @@ export function RepoChanges({
           ) : null}
         </>
       )}
+      {branch ? (
+        <FolderProjectPullRequestDialog
+          open={prOpen}
+          onOpenChange={setPrOpen}
+          repoPath={repo.path}
+          repoName={repo.name}
+          branch={branch}
+          upstream={upstream}
+          hasUncommittedChanges={entries.length > 0}
+          onCreated={() => void onChanged()}
+        />
+      ) : null}
       <Dialog
         open={pendingDiscard !== null}
         onOpenChange={(open) => !open && setPendingDiscard(null)}

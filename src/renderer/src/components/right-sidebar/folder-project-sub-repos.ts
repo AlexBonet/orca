@@ -8,7 +8,9 @@ const SUB_REPO_SCAN_DEPTH = 3
 /** Repos inside a plain folder project, found by the same scanner the nested-import flow uses (nothing is imported). */
 export function useFolderProjectSubRepos(
   folderPath: string | null,
-  enabled: boolean
+  enabled: boolean,
+  /** The folder is itself a Git repo (opened as a folder on purpose); it is listed first. */
+  rootRepo: { name: string } | null
 ): { repos: FolderProjectSubRepo[]; loading: boolean } {
   const [state, setState] = useState<{ path: string; repos: FolderProjectSubRepo[] } | null>(null)
 
@@ -27,9 +29,13 @@ export function useFolderProjectSubRepos(
           if (cancelled) {
             return
           }
-          const repos = result.repos
+          const children = result.repos
             .map((candidate) => ({ path: candidate.path, name: candidate.displayName }))
+            .filter((repo) => !rootRepo || repo.path !== folderPath)
             .sort((a, b) => a.name.localeCompare(b.name))
+          const repos = rootRepo
+            ? [{ path: folderPath, name: rootRepo.name }, ...children]
+            : children
           setState((previous) =>
             previous?.path === folderPath &&
             previous.repos.length === repos.length &&
@@ -48,7 +54,7 @@ export function useFolderProjectSubRepos(
       cancelled = true
       clearInterval(timer)
     }
-  }, [enabled, folderPath])
+  }, [enabled, folderPath, rootRepo])
 
   const current = state?.path === folderPath ? state.repos : []
   return { repos: current, loading: enabled && folderPath !== null && state?.path !== folderPath }
