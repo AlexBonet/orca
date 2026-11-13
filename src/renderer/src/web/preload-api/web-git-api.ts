@@ -228,6 +228,10 @@ export function createGitApi(): NonNullable<Partial<PreloadApi>['git']> {
         worktree: toRuntimeWorktreeSelector(worktree.id)
       })
     },
+    localBranches: async () => ({ current: null, branches: [] }),
+    switchBranch: async () => {
+      throw new Error('Switching branches by path is unavailable in the web client.')
+    },
     generateCommitMessage: async () => ({
       success: false,
       error: translate(

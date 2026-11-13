@@ -38,11 +38,20 @@ describe('findNestedFolderRepoRoot', () => {
     ).toBe(join(folder, 'pou-android'))
   })
 
-  it('rejects the folder itself, plain subfolders and paths inside a repo', async () => {
+  it('accepts the folder itself only when it was opened at a Git root on purpose', async () => {
+    const folder = join(root, 'pou')
+    makeRepo(folder)
+    expect(await findNestedFolderRepoRoot(folder, [folderProject(folder)])).toBeNull()
+    expect(
+      await findNestedFolderRepoRoot(folder, [folderProject(folder, { keepAsFolder: true })])
+    ).toBe(folder)
+  })
+
+  it('rejects a plain folder even when opened on purpose, plus plain subfolders and paths inside a repo', async () => {
     const folder = join(root, 'pou')
     makeRepo(join(folder, 'web'))
     mkdirSync(join(folder, 'notes'), { recursive: true })
-    const repos = [folderProject(folder)]
+    const repos = [folderProject(folder, { keepAsFolder: true })]
     expect(await findNestedFolderRepoRoot(folder, repos)).toBeNull()
     expect(await findNestedFolderRepoRoot(join(folder, 'notes'), repos)).toBeNull()
     expect(await findNestedFolderRepoRoot(join(folder, 'web', 'src'), repos)).toBeNull()

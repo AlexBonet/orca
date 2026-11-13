@@ -29,13 +29,18 @@ export async function findNestedFolderRepoRoot(
       continue
     }
     const folderRoot = resolve(repo.path)
-    if (resolvedTarget === folderRoot || !isDescendantOrEqual(resolvedTarget, folderRoot)) {
+    // The folder itself counts only when the user opened a Git root on purpose as a folder.
+    const isFolderItself = resolvedTarget === folderRoot
+    if (
+      !isDescendantOrEqual(resolvedTarget, folderRoot) ||
+      (isFolderItself && repo.keepAsFolder !== true)
+    ) {
       continue
     }
     // Realpath both sides so a symlinked child cannot point outside the folder.
     const realFolder = await normalizeExistingPath(folderRoot)
     const realTarget = await normalizeExistingPath(resolvedTarget)
-    if (realTarget === realFolder || !isDescendantOrEqual(realTarget, realFolder)) {
+    if (!isDescendantOrEqual(realTarget, realFolder)) {
       continue
     }
     if (relative(realFolder, realTarget).split(sep).length > MAX_NESTED_REPO_DEPTH) {

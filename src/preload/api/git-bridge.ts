@@ -181,6 +181,9 @@ export const gitApi = {
     connectionId?: string
   }): Promise<{ success: boolean; error?: string }> =>
     ipcRenderer.invoke('git:completeMerge', args),
+  localBranches: (args: { worktreePath: string }) => ipcRenderer.invoke('git:localBranches', args),
+  switchBranch: (args: { worktreePath: string; target: { kind: string; name: string } }) =>
+    ipcRenderer.invoke('git:switchBranch', args),
   generateCommitMessage: (args: {
     worktreePath: string
     worktreeId?: string

@@ -7,6 +7,9 @@ export const hostedReviewApi = {
     ipcRenderer.invoke('hostedReview:forBranch', args),
   getCreationEligibility: (args: unknown) =>
     ipcRenderer.invoke('hostedReview:getCreationEligibility', args),
+  getCreationEligibilityForPath: (args: unknown) =>
+    ipcRenderer.invoke('hostedReview:getCreationEligibilityForPath', args),
+  createForPath: (args: unknown) => ipcRenderer.invoke('hostedReview:createForPath', args),
   create: (args: unknown) => ipcRenderer.invoke('hostedReview:create', args),
   createStacked: (args: unknown) => ipcRenderer.invoke('hostedReview:createStacked', args)
 } satisfies PreloadApi['hostedReview']

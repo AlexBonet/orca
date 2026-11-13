@@ -18,6 +18,9 @@ export async function switchRuntimeGitBranch(
     : translate('sourceControl.branchPicker.thisComputer', 'this computer'),
   beforeSend?: () => void
 ): Promise<RuntimeGitSwitchResult> {
+  if (!context.worktreeId) {
+    return window.api.git.switchBranch({ worktreePath: context.worktreePath, target })
+  }
   try {
     const params = { worktree: toRuntimeWorktreeSelector(context.worktreeId ?? ''), target }
     return await (beforeSend
@@ -41,6 +44,9 @@ export async function switchRuntimeGitBranch(
 export function listRuntimeGitBranches(
   context: RuntimeGitContext
 ): Promise<RuntimeGitLocalBranches> {
+  if (!context.worktreeId) {
+    return window.api.git.localBranches({ worktreePath: context.worktreePath })
+  }
   return callRuntimeRpc(context.target, 'git.localBranches', {
     worktree: toRuntimeWorktreeSelector(context.worktreeId ?? '')
   })
@@ -50,6 +56,10 @@ export function searchRuntimeRemoteBranches(
   repoId: string,
   query: string
 ): Promise<RuntimeRepoSearchRefs> {
+  // A sub-repo has no registered repo to search; local branches and new branches still work.
+  if (!context.worktreeId) {
+    return Promise.resolve({ namespace: 'remote', refs: [], truncated: false })
+  }
   return callRuntimeRpc(context.target, 'repo.searchRefs', {
     repo: repoId,
     query,

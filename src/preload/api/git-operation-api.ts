@@ -13,6 +13,11 @@ import type { ConflictResolution } from '../../shared/source-control/listing/sou
 import type { HostedReviewProvider } from '../../shared/source-control/hosted-review/hosted-review-contracts'
 import type { ResolvedSourceControlAiGenerationParams } from '../../shared/source-control/ai/source-control-ai-operation-resolution'
 import type { SourceControlAiSettings } from '../../shared/source-control/ai/settings/source-control-ai-settings-types'
+import type { BranchSwitchTarget } from '../../shared/git/branch-switch-target'
+import type {
+  RuntimeGitLocalBranches,
+  RuntimeGitSwitchResult
+} from '../../shared/runtime-worktree-contracts'
 import type { TextGenerationFailureFields } from '../../shared/text-generation-failure-copy'
 
 export type GitOperationApi = {
@@ -86,6 +91,11 @@ export type GitOperationApi = {
     worktreePath: string
     connectionId?: string
   }) => Promise<{ success: boolean; error?: string }>
+  localBranches: (args: { worktreePath: string }) => Promise<RuntimeGitLocalBranches>
+  switchBranch: (args: {
+    worktreePath: string
+    target: BranchSwitchTarget
+  }) => Promise<RuntimeGitSwitchResult>
   generateCommitMessage: (args: {
     worktreePath: string
     /** Raw (unstripped) worktree meta key; validated against worktreePath in main. */
