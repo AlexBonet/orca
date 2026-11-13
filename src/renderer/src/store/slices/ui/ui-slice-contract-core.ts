@@ -8,10 +8,10 @@ import type { GitHubWorkItem } from '../../../../../shared/github/work-item-type
 import type { GitLabWorkItem } from '../../../../../shared/gitlab-types'
 import type { JiraIssue } from '../../../../../shared/jira/jira-types'
 import type { LinearIssue } from '../../../../../shared/linear/issue-types'
-import type { TaskProvider } from '../../../../../shared/task-providers'
-import type { TuiAgent } from '../../../../../shared/tui-agent'
+import type { TaskProvider } from '../../../../../shared/work-items/task-providers'
+import type { TuiAgent } from '../../../../../shared/agent-launch/catalog/tui-agent'
 import type { LaunchSource } from '../../../../../shared/telemetry-events'
-import type { TaskSourceContext } from '../../../../../shared/task-source-context'
+import type { TaskSourceContext } from '../../../../../shared/work-items/task-source-context'
 import type { ExecutionHostId } from '../../../../../shared/execution-host'
 import type { TaskResumeState, TopLevelView } from '../../../../../shared/ui-chrome-types'
 
@@ -86,7 +86,7 @@ export type NewWorkspaceDraft = {
   note: string
   attachments: string[]
   linkedWorkItem: {
-    provider?: 'github' | 'gitlab' | 'linear' | 'jira'
+    provider?: 'github' | 'gitlab' | 'linear' | 'jira' | 'plane'
     type: 'issue' | 'pr' | 'mr'
     number: number
     title: string
@@ -94,6 +94,7 @@ export type NewWorkspaceDraft = {
     linearIdentifier?: string
     linearBranchName?: string
     jiraIdentifier?: string
+    identifier?: string
     repoId?: string
   } | null
   /** Preserve where provider data came from, separately from the host chosen to run the workspace. */

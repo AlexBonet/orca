@@ -33,6 +33,7 @@ import { glApiBridge } from './api/gl-bridge'
 import { bitbucketApi } from './api/bitbucket-bridge'
 import { linearApi } from './api/linear-bridge'
 import { jiraApi } from './api/jira-bridge'
+import { planeApi } from './api/plane-bridge'
 import { starNagApi } from './api/star-nag-bridge'
 import { diagnosticsApi } from './api/diagnostics-bridge'
 import { settingsApi } from './api/settings-bridge'
@@ -54,6 +55,8 @@ import { computerUsePermissionsApi } from './api/computer-use-permissions-bridge
 import { shellApi } from './api/shell-bridge'
 import { skillsApi } from './api/skills-bridge'
 import { petApi } from './api/pet-bridge'
+import { appIconApi } from './api/app-icon-bridge'
+import { browserPasswordsApi } from './api/browser-passwords-bridge'
 import { browserApi } from './api/browser/browser-bridge'
 import { emulatorApi } from './api/emulator-bridge'
 import { hooksApi } from './api/hooks-bridge'
@@ -133,6 +136,7 @@ const api = {
   bitbucket: bitbucketApi,
   linear: linearApi,
   jira: jiraApi,
+  plane: planeApi,
   starNag: starNagApi,
   telemetryTrack: telemetryTrackApi,
   telemetrySetOptIn: telemetrySetOptInApi,
@@ -158,7 +162,9 @@ const api = {
   shell: shellApi,
   skills: skillsApi,
   pet: petApi,
+  appIcon: appIconApi,
   browser: browserApi,
+  browserPasswords: browserPasswordsApi,
   emulator: emulatorApi,
   hooks: hooksApi,
   ephemeralVm: ephemeralVmApi,

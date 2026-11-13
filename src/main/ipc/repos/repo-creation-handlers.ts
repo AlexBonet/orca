@@ -6,13 +6,17 @@ import { homedir } from 'node:os'
 import { isAbsolute, join } from 'node:path'
 import type { Store } from '../../persistence/loading-store/store'
 import type { Repo } from '../../../shared/repo-types'
+import type { RepositoryMetadataOwner } from '../../workspaces/catalog/imported-folder-project-link'
 import { DEFAULT_REPO_BADGE_COLOR, getDefaultWorkspaceDir } from '../../../shared/constants'
 import { normalizeRuntimePathForComparison } from '../../../shared/cross-platform-path'
-import { LOCAL_EXECUTION_HOST_ID } from '../../../shared/execution-host'
+import { getRepoExecutionHostId, LOCAL_EXECUTION_HOST_ID } from '../../../shared/execution-host'
 import { getEffectiveHostSetting } from '../../../shared/host-setting-overrides'
 import { probeGitAvailability } from '../../git/git-availability'
-import { gitExecFileAsync } from '../../git/runner'
-import { detectRepoIconAndUpstream } from '../../repository-icons/repo-icon-autodetect'
+import { awaitWindowsHostGitEnvironmentReady, gitExecFileAsync } from '../../git/runner'
+import { inspectGitRepoForRegistrationAsync } from '../../git/repo'
+import { isStrictSubfolderOfGitRoot } from '../../git/repo-subfolder-detection'
+import { getClonePathComparisonKey, getSavedProjectPathKeys } from '../../git/repo-clone-path'
+import { detectRepoLocalMetadata } from '../../repository-icons/repo-icon-autodetect'
 import { prepareLocalWorktreeRootForRepo } from '../../workspaces/creation/worktree-root-preparation'
 import { invalidateAuthorizedRootsCache } from '../worktrees/removal/registered-worktree-roots-cache'
 import { repoCreateFailure, type RepoCreateFailure } from '../../../shared/repo-create-failure-copy'
@@ -49,8 +53,25 @@ function getDefaultCreateProjectParent(store: Store): string {
   return join(home, 'orca', 'projects')
 }
 
-export function registerRepoCreationHandlers(mainWindow: BrowserWindow, store: Store): void {
+export function registerRepoCreationHandlers(
+  mainWindow: BrowserWindow,
+  store: Store,
+  enqueueMetadata: RepositoryMetadataOwner['enqueueRepositoryMetadata']
+): void {
   ipcMain.handle('repos:isGitAvailable', () => probeLocalGitAvailability())
+  ipcMain.handle(
+    'repos:getContainingGitRoot',
+    async (_event, args: { path: string }): Promise<{ rootPath: string | null }> => {
+      await awaitWindowsHostGitEnvironmentReady({ cwd: args.path })
+      const info = await inspectGitRepoForRegistrationAsync(args.path)
+      if (!info.isRepo) {
+        return { rootPath: null }
+      }
+      // Why: only a strict subfolder needs a choice; picking the repo root keeps the normal Git flow.
+      const isSubfolder = await isStrictSubfolderOfGitRoot(args.path, info.rootPath)
+      return { rootPath: isSubfolder ? info.rootPath : null }
+    }
+  )
   ipcMain.handle('repos:getDefaultCreateProjectParent', () => getDefaultCreateProjectParent(store))
 
   ipcMain.handle(
@@ -68,6 +89,7 @@ export function registerRepoCreationHandlers(mainWindow: BrowserWindow, store: S
       }
       invalidateAuthorizedRootsCache()
       notifyReposChanged(mainWindow)
+      enqueueMetadata([result.repo])
       emitRepoAdded('folder_picker', result.alreadyExisted, result.repo.kind === 'git')
       return { repo: result.repo }
     }
@@ -101,9 +123,14 @@ export function registerRepoCreationHandlers(mainWindow: BrowserWindow, store: S
       }
 
       const targetPath = join(parentPath, name)
+      let targetPathKeys = await getSavedProjectPathKeys(targetPath)
+      // This creates a folder on this machine, so a remote project at the same path is not it.
+      const isTargetRepo = (r: Repo): boolean =>
+        targetPathKeys.includes(getClonePathComparisonKey(r.path)) &&
+        getRepoExecutionHostId(r) === LOCAL_EXECUTION_HOST_ID
 
       // Repeated Create requests must share one registration.
-      const existing = store.getRepos().find((r) => r.path === targetPath)
+      const existing = store.getRepos().find(isTargetRepo)
       if (existing) {
         emitRepoAdded('folder_picker', true, repoKind === 'git')
         return { repo: existing }
@@ -154,7 +181,7 @@ export function registerRepoCreationHandlers(mainWindow: BrowserWindow, store: S
               : undefined
           const isEexist = code === 'EEXIST' || (err instanceof Error && /EEXIST/.test(err.message))
           if (isEexist) {
-            const raceWinner = store.getRepos().find((r) => r.path === targetPath)
+            const raceWinner = store.getRepos().find(isTargetRepo)
             if (raceWinner) {
               return { repo: raceWinner }
             }
@@ -202,21 +229,27 @@ export function registerRepoCreationHandlers(mainWindow: BrowserWindow, store: S
       }
 
       // IPC calls interleave while awaiting filesystem and Git work; recheck before registration.
-      const raceWinner = store.getRepos().find((r) => r.path === targetPath)
+      targetPathKeys = await getSavedProjectPathKeys(targetPath)
+      const raceWinner = store.getRepos().find(isTargetRepo)
       if (raceWinner) {
         // A concurrent winner owns the directory even if this request created it.
         emitRepoAdded('folder_picker', true, repoKind === 'git')
         return { repo: raceWinner }
       }
 
-      const detected = await detectRepoIconAndUpstream({
-        repoPath: targetPath,
+      // Register Git's checkout path so the new project stays its own selected checkout.
+      const repoPath =
+        repoKind === 'git'
+          ? (await inspectGitRepoForRegistrationAsync(targetPath)).rootPath
+          : targetPath
+      const detected = await detectRepoLocalMetadata({
+        repoPath,
         kind: repoKind,
         executionHostId: LOCAL_EXECUTION_HOST_ID
       })
       const repo: Repo = {
         id: randomUUID(),
-        path: targetPath,
+        path: repoPath,
         displayName: name,
         badgeColor: DEFAULT_REPO_BADGE_COLOR,
         ...detected,
@@ -231,6 +264,7 @@ export function registerRepoCreationHandlers(mainWindow: BrowserWindow, store: S
       }
 
       store.addRepo(repo)
+      enqueueMetadata([repo])
       await prepareLocalWorktreeRootForRepo(store, repo)
       invalidateAuthorizedRootsCache()
       notifyReposChanged(mainWindow)

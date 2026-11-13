@@ -1,5 +1,6 @@
 import { resolve } from 'node:path'
 import { findRegisteredWorktreeRoot } from './registered-worktree-root-match'
+import { findNestedFolderRepoRoot } from './folder-project-nested-repo-roots'
 import type { Repo } from '../../../../shared/repo-types'
 import type { RegisteredWorktreeRootStore as Store } from './registered-worktree-root-store'
 import {
@@ -9,7 +10,7 @@ import {
 import {
   isDescendantOrEqual,
   normalizeExistingPath
-} from '../../filesystem/filesystem-path-containment'
+} from '../../filesystem/access/filesystem-path-containment'
 import {
   findOwnersListedThroughAnotherGit,
   shouldRelistOwner
@@ -252,6 +253,10 @@ export async function resolveRegisteredWorktreePath(
   synchronizeOwners(store)
   if (registeredWorktreeRoots.has(normalizedTarget)) {
     return normalizedTarget
+  }
+  const nestedRepoRoot = await findNestedFolderRepoRoot(resolvedTarget, currentOwners.values())
+  if (nestedRepoRoot) {
+    return nestedRepoRoot
   }
   throw new Error('Access denied: unknown repository or worktree path')
 }

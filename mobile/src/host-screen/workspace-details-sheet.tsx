@@ -42,6 +42,7 @@ const PROVIDER_LABELS: Record<WorkspaceDetailLink['provider'], string> = {
   gitlab: 'GitLab',
   linear: 'Linear',
   jira: 'Jira',
+  plane: 'Plane',
   bitbucket: 'Bitbucket',
   'azure-devops': 'Azure DevOps',
   gitea: 'Gitea'
@@ -58,7 +59,8 @@ function checkLabels(t: Translate): Record<string, string> {
   return {
     success: t('hostScreen.workspaceDetailsSheet.checksPassing', 'Checks: Passing'),
     failure: t('hostScreen.workspaceDetailsSheet.checksFailing', 'Checks: Failing'),
-    pending: t('hostScreen.workspaceDetailsSheet.checksPending', 'Checks: Pending')
+    pending: t('hostScreen.workspaceDetailsSheet.checksPending', 'Checks: Pending'),
+    cancelled: t('pullRequest.checkStatus.cancelled', 'Cancelled')
   }
 }
 

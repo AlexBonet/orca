@@ -16,6 +16,8 @@ export const reposApi = {
 
   isGitAvailable: (): Promise<boolean> => ipcRenderer.invoke('repos:isGitAvailable'),
 
+  getContainingGitRoot: (args) => ipcRenderer.invoke('repos:getContainingGitRoot', args),
+
   getDefaultCreateProjectParent: (): Promise<string> =>
     ipcRenderer.invoke('repos:getDefaultCreateProjectParent'),
 
@@ -34,6 +36,8 @@ export const reposApi = {
   pickDirectory: () => ipcRenderer.invoke('repos:pickDirectory'),
 
   clone: (args) => ipcRenderer.invoke('repos:clone', args),
+
+  checkCloneTarget: (args) => ipcRenderer.invoke('repos:checkCloneTarget', args),
 
   cloneAbort: () => ipcRenderer.invoke('repos:cloneAbort'),
 

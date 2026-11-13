@@ -1,5 +1,5 @@
 import type { JiraIssueFilter } from '../../../src/shared/jira/jira-types'
-import type { TaskProvider } from '../../../src/shared/task-providers'
+import type { TaskProvider } from '../../../src/shared/work-items/task-providers'
 import type { PickerOption } from '../components/PickerModal'
 import { translate } from '../i18n/mobile-i18n'
 import { JIRA_FILTER_LABELS } from './mobile-jira-issue-filters'
@@ -8,7 +8,8 @@ export const PROVIDER_LABELS: Record<TaskProvider, string> = {
   github: 'GitHub',
   gitlab: 'GitLab',
   linear: 'Linear',
-  jira: 'Jira'
+  jira: 'Jira',
+  plane: 'Plane'
 }
 
 export const PROVIDER_EMPTY_LABELS: Record<TaskProvider, string> = {
@@ -23,6 +24,9 @@ export const PROVIDER_EMPTY_LABELS: Record<TaskProvider, string> = {
   },
   get jira() {
     return translate('tasks.taskViewOptions.noJiraTasks', 'No Jira tasks')
+  },
+  get plane() {
+    return translate('tasks.taskViewOptions.noPlaneTasks', 'No Plane tasks')
   }
 }
 

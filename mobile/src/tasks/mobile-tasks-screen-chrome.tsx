@@ -10,13 +10,15 @@ import { renderMobileTasksProviderControls } from './mobile-tasks-provider-contr
 import { selectMobileTasksProvider } from './mobile-tasks-provider-pickers'
 import type { Translate } from '../i18n/mobile-i18n'
 import { useMobileTranslation } from '../i18n/use-mobile-translation'
+import { useRefreshHint } from '../query/refresh-hint'
 
 function refreshLabels(t: Translate) {
   return {
     github: t('tasks.screenChrome.refreshGitHub', 'Refresh GitHub work'),
     gitlab: t('tasks.screenChrome.refreshGitLab', 'Refresh GitLab work items'),
     linear: t('tasks.screenChrome.refreshLinear', 'Refresh Linear'),
-    jira: t('tasks.screenChrome.refreshJira', 'Refresh Jira issues')
+    jira: t('tasks.screenChrome.refreshJira', 'Refresh Jira issues'),
+    plane: t('tasks.screenChrome.refreshPlane', 'Refresh Plane work items')
   }
 }
 
@@ -73,10 +75,12 @@ export function MobileTasksStatusBar({
     refreshGitHubProject,
     refreshTasks,
     refreshing,
+    revalidating,
     router,
     taskUiReady
   } = model
   const t = useMobileTranslation()
+  const showRefreshLine = useRefreshHint(revalidating)
   return (
     <NavBar
       leading={
@@ -108,6 +112,7 @@ export function MobileTasksStatusBar({
         />
       }
       accessory={accessory}
+      refreshing={showRefreshLine}
     />
   )
 }

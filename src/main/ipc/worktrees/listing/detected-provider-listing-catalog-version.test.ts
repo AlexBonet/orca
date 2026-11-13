@@ -41,7 +41,7 @@ const localRepo: Repo = {
   addedAt: 0
 }
 
-function createStore(repo: Repo) {
+function createStore(repo: Repo, cursor?: { epoch: string; seq: number }) {
   // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: the listing reads only these store methods; the pruning that would need more is mocked above.
   return {
     getRepo: () => repo,
@@ -55,7 +55,8 @@ function createStore(repo: Repo) {
     getAllWorktreeLineage: () => ({}),
     getAllWorkspaceLineage: () => ({}),
     removeWorktreeLineage: vi.fn(),
-    captureNativeLocalWorktreeMetadataScanExpectation: () => undefined
+    captureNativeLocalWorktreeMetadataScanExpectation: () => undefined,
+    ...(cursor ? { getWorkspaceMetadataCursor: () => ({ ...cursor }) } : {})
   } as never
 }
 
@@ -107,15 +108,25 @@ describe('the catalog version a listing carries', () => {
     )
   })
 
-  it('a create reply issued after the change names a later catalog than the listing', async () => {
-    listRepoWorktreesMock.mockResolvedValue([worktreeAt(localRepo, localRepo.path)])
-    const listing = await listLocal()
-    // Create notifications bump generation before stamping the reply.
-    invalidateDetectedWorktreeScanCache(localRepo.id)
-    const createReply = getLocalWorktreeCatalogVersion(localRepo.id)
+  it('carries the metadata cursor it read with its metadata, not one advanced during the scan', async () => {
+    const cursor = { epoch: 'e1', seq: 4 }
+    // A title write lands while the scan is still running.
+    listRepoWorktreesMock.mockImplementation(async () => {
+      cursor.seq = 5
+      return [worktreeAt(localRepo, localRepo.path)]
+    })
+    const store = createStore(localRepo, cursor)
 
-    const listed = listing && 'catalogVersion' in listing ? listing.catalogVersion : undefined
-    expect(listed?.epoch).toBe(createReply.epoch)
-    expect(listed!.sequence).toBeLessThan(createReply.sequence)
+    const during = await listDetectedWorktreesForCapturedRepo(store, localRepo, () => true)
+    const after = await listDetectedWorktreesForCapturedRepo(store, localRepo, () => true)
+
+    expect(during && 'workspaceMetadata' in during ? during.workspaceMetadata : null).toEqual({
+      epoch: 'e1',
+      seq: 4
+    })
+    expect(after && 'workspaceMetadata' in after ? after.workspaceMetadata : null).toEqual({
+      epoch: 'e1',
+      seq: 5
+    })
   })
 })

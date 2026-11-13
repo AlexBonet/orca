@@ -1,5 +1,5 @@
 import { ipcRenderer } from 'electron'
-import type { HostedReviewForBranchArgs } from '../../shared/hosted-review'
+import type { HostedReviewForBranchArgs } from '../../shared/source-control/hosted-review/hosted-review-contracts'
 import type { PreloadApi } from '../api-types'
 
 export const hostedReviewApi = {
@@ -7,6 +7,9 @@ export const hostedReviewApi = {
     ipcRenderer.invoke('hostedReview:forBranch', args),
   getCreationEligibility: (args: unknown) =>
     ipcRenderer.invoke('hostedReview:getCreationEligibility', args),
+  getCreationEligibilityForPath: (args: unknown) =>
+    ipcRenderer.invoke('hostedReview:getCreationEligibilityForPath', args),
+  createForPath: (args: unknown) => ipcRenderer.invoke('hostedReview:createForPath', args),
   create: (args: unknown) => ipcRenderer.invoke('hostedReview:create', args),
   createStacked: (args: unknown) => ipcRenderer.invoke('hostedReview:createStacked', args)
 } satisfies PreloadApi['hostedReview']

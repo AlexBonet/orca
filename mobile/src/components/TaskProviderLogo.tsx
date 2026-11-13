@@ -1,6 +1,6 @@
 import Svg, { Path } from 'react-native-svg'
 
-export type TaskProviderLogoKind = 'github' | 'gitlab' | 'linear' | 'jira'
+export type TaskProviderLogoKind = 'github' | 'gitlab' | 'linear' | 'jira' | 'plane'
 
 type Props = {
   provider: TaskProviderLogoKind
@@ -42,6 +42,24 @@ export function TaskProviderLogo({ provider, size = 16, color }: Props) {
       >
         {/* Why: lucide-react-native omits deprecated brand icons; keep parity with desktop lucide paths. */}
         <Path d="m22 13.29-3.33-10a.42.42 0 0 0-.14-.18.38.38 0 0 0-.22-.11.39.39 0 0 0-.23.07.42.42 0 0 0-.14.18l-2.26 6.67H8.32L6.1 3.26A.42.42 0 0 0 6 3.08.38.38 0 0 0 5.74 3a.39.39 0 0 0-.23.07.42.42 0 0 0-.14.18L2 13.29a.74.74 0 0 0 .27.83L12 21l9.69-6.88a.71.71 0 0 0 .31-.83Z" />
+      </Svg>
+    )
+  }
+
+  if (provider === 'plane') {
+    return (
+      <Svg
+        width={size}
+        height={size}
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke={color}
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        {/* Why: matches the lucide plane glyph desktop uses for Plane. */}
+        <Path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z" />
       </Svg>
     )
   }

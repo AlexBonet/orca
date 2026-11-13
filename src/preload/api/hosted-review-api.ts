@@ -5,6 +5,7 @@ import type {
 } from '../../shared/bitbucket-credentials'
 import type {
   CreateHostedReviewArgs,
+  CreateHostedReviewInput,
   CreateHostedReviewResult,
   CreateStackedHostedReviewArgs,
   CreateStackedHostedReviewResult,
@@ -13,7 +14,7 @@ import type {
   HostedReviewForBranchArgs,
   HostedReviewForBranchReply,
   HostedReviewInfo
-} from '../../shared/hosted-review'
+} from '../../shared/source-control/hosted-review/hosted-review-contracts'
 
 export type HostedReviewApi = {
   forBranch: {
@@ -25,6 +26,20 @@ export type HostedReviewApi = {
   getCreationEligibility: (
     args: HostedReviewCreationEligibilityArgs
   ) => Promise<HostedReviewCreationEligibility>
+  /** For a local sub-repo of a folder project, which has no registered repo record. */
+  getCreationEligibilityForPath: (args: {
+    path: string
+    branch: string
+    base?: string | null
+    hasUpstream?: boolean
+    ahead?: number
+    behind?: number
+    hasUncommittedChanges?: boolean
+  }) => Promise<HostedReviewCreationEligibility>
+  createForPath: (args: {
+    path: string
+    input: CreateHostedReviewInput
+  }) => Promise<CreateHostedReviewResult>
   create: (args: CreateHostedReviewArgs) => Promise<CreateHostedReviewResult>
   createStacked: (args: CreateStackedHostedReviewArgs) => Promise<CreateStackedHostedReviewResult>
 }

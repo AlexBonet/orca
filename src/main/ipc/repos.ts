@@ -38,6 +38,7 @@ export function registerRepoHandlers(
   ipcMain.removeHandler('projectGroups:list')
   ipcMain.removeHandler('projectGroups:create')
   ipcMain.removeHandler('projectGroups:update')
+  ipcMain.removeHandler('projectGroups:updateMany')
   ipcMain.removeHandler('projectGroups:delete')
   ipcMain.removeHandler('projectGroups:moveProject')
   ipcMain.removeHandler('projectGroups:scanNested')
@@ -52,8 +53,10 @@ export function registerRepoHandlers(
   ipcMain.removeHandler('repos:pickFolders')
   ipcMain.removeHandler('repos:pickDirectory')
   ipcMain.removeHandler('repos:clone')
+  ipcMain.removeHandler('repos:checkCloneTarget')
   ipcMain.removeHandler('repos:cloneAbort')
   ipcMain.removeHandler('repos:isGitAvailable')
+  ipcMain.removeHandler('repos:getContainingGitRoot')
   ipcMain.removeHandler('repos:getDefaultCreateProjectParent')
   ipcMain.removeHandler('repos:getBaseRefDefault')
   ipcMain.removeHandler('repos:searchBaseRefs')
@@ -64,14 +67,22 @@ export function registerRepoHandlers(
   ipcMain.removeHandler('sparsePresets:remove')
 
   registerRepoCatalogHandlers(mainWindow, store, runtime)
-  registerProjectHostSetupHandlers(mainWindow, store)
-  registerRepoCreationHandlers(mainWindow, store)
+  const metadata = {
+    enqueueRepositoryMetadata: (
+      repos: Parameters<typeof runtime.repositoryForkBackfill.enqueue>[0]
+    ) => void runtime.repositoryForkBackfill.enqueue(repos),
+    resolveRepositoryMetadata: (
+      repo: Parameters<typeof runtime.repositoryForkBackfill.resolve>[0]
+    ) => runtime.repositoryForkBackfill.resolve(repo)
+  }
+  registerProjectHostSetupHandlers(mainWindow, store, metadata)
+  registerRepoCreationHandlers(mainWindow, store, metadata.enqueueRepositoryMetadata)
   registerProjectGroupHandlers(mainWindow, store)
   registerFolderWorkspaceHandlers(mainWindow, store, runtime)
-  registerNestedRepoImportHandler(mainWindow, store)
+  registerNestedRepoImportHandler(mainWindow, store, metadata.enqueueRepositoryMetadata)
   registerRepoUpdateHandler(mainWindow, store)
   registerSparsePresetHandlers(mainWindow, store)
   registerRepoFolderPickerHandlers(mainWindow)
-  registerRepoCloneHandlers(mainWindow, store)
+  registerRepoCloneHandlers(mainWindow, store, metadata.enqueueRepositoryMetadata)
   registerBaseRefQueryHandlers(store)
 }

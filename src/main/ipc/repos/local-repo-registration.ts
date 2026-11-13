@@ -1,10 +1,11 @@
-import { randomUUID } from 'node:crypto'
+import { stat } from 'node:fs/promises'
+import { join } from 'node:path'
 import type { Store } from '../../persistence/loading-store/store'
 import type { Repo } from '../../../shared/repo-types'
 import { isFolderRepo } from '../../../shared/repo-kind'
-import { DEFAULT_REPO_BADGE_COLOR } from '../../../shared/constants'
 import { normalizeRuntimePathForComparison } from '../../../shared/cross-platform-path'
 import { awaitWindowsHostGitEnvironmentReady } from '../../git/runner'
+import { isStrictSubfolderOfGitRoot } from '../../git/repo-subfolder-detection'
 import {
   inspectGitRepoForRegistrationAsync,
   getGitRepoRootAsync,
@@ -12,9 +13,17 @@ import {
 } from '../../git/repo'
 import { getRepoExecutionHostId, LOCAL_EXECUTION_HOST_ID } from '../../../shared/execution-host'
 import { findProjectAtSameRealPath } from '../../workspaces/catalog/project-realpath-identity'
-import { detectRepoIconAndUpstream } from '../../repository-icons/repo-icon-autodetect'
+import { detectRepoLocalMetadata } from '../../repository-icons/repo-icon-autodetect'
 import { prepareLocalWorktreeRootForRepo } from '../../workspaces/creation/worktree-root-preparation'
 import { describeWslUncAccessDenied } from '../../wsl/filesystem/wsl-unc-access-denied'
+import { createLocalProjectRecord } from '../../workspaces/catalog/local-project-record'
+
+async function hasGitMarker(dir: string): Promise<boolean> {
+  return stat(join(dir, '.git')).then(
+    () => true,
+    () => false
+  )
+}
 
 export async function addLocalRepoFromPath(
   store: Store,
@@ -35,8 +44,14 @@ export async function addLocalRepoFromPath(
     }
   }
 
-  const resolvedPath = gitInfo?.rootPath ?? path
   const pathKey = normalizeRuntimePathForComparison(path)
+  if (gitInfo && (await isStrictSubfolderOfGitRoot(path, gitInfo.rootPath))) {
+    return {
+      error: `${path} is inside the Git repository ${gitInfo.rootPath}. Add it as a folder, or add the repository root instead.`
+    }
+  }
+
+  const resolvedPath = gitInfo?.rootPath ?? path
   const existing = store
     .getRepos()
     .find((repo) => !repo.connectionId && normalizeRuntimePathForComparison(repo.path) === pathKey)
@@ -87,7 +102,7 @@ export async function addLocalRepoFromPath(
     }
   }
 
-  const detected = await detectRepoIconAndUpstream({
+  const detected = await detectRepoLocalMetadata({
     repoPath: resolvedPath,
     kind: repoKind,
     executionHostId: LOCAL_EXECUTION_HOST_ID
@@ -107,22 +122,13 @@ export async function addLocalRepoFromPath(
   if (raceWinner) {
     return { repo: raceWinner, alreadyExisted: true }
   }
-  const repo: Repo = {
-    id: randomUUID(),
+  const repo = createLocalProjectRecord({
     path: resolvedPath,
     displayName: displayName?.trim() || getRepoName(resolvedPath),
-    badgeColor: DEFAULT_REPO_BADGE_COLOR,
-    ...detected,
-    addedAt: Date.now(),
     kind: repoKind,
-    ...(repoKind === 'git'
-      ? {
-          externalWorktreeVisibilityLegacy: false,
-          // Explicit imports are ready host setups; legacy-repo is reserved for migrated records.
-          projectHostSetupMethod: 'imported-existing-folder' as const
-        }
-      : {})
-  }
+    detected,
+    keepAsFolder: repoKind === 'folder' && (await hasGitMarker(resolvedPath))
+  })
 
   store.addRepo(repo)
   await prepareLocalWorktreeRootForRepo(store, repo)

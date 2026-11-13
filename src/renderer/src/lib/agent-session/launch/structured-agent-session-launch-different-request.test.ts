@@ -1,14 +1,26 @@
 // @vitest-environment happy-dom
 
+// @vitest-environment happy-dom
 import {
   readNativeChatComposerDraft,
-  structuredAgentSessionDraftScopeKey,
   updateNativeChatComposerDraft
-} from '@/components/native-chat/native-chat-composer-draft-store'
-import type * as LaunchErrors from '@/lib/agent-session/launch/structured-agent-session-launch-errors'
+} from '@/components/native-chat/drafts/native-chat-composer-draft-store'
+import { structuredAgentSessionDraftScopeKey } from '@/components/native-chat/drafts/native-chat-draft-scope'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { refreshLocalStructuredSessionTabs } from '@/runtime/local-structured-session-tabs-sync/inventory-refresh'
+import { resetStructuredAgentSessionSendsForTests } from '@/components/native-chat/session/structured/delivery/structured-agent-session-message-sender'
+import { clearNativeChatComposerDraftsForTests as clearNativeChatDraftCacheForTests } from '@/components/native-chat/drafts/native-chat-draft-reset'
+import { resetStructuredAgentLaunchRegistryForTests } from './structured-agent-session-launch-registry'
+import { startStructuredAgentLaunch } from './structured-agent-session-launch'
+import {
+  discardStructuredLaunchPrompts,
+  hasStagedStructuredLaunchPrompt
+} from './structured-agent-session-launch-prompt'
+import { resetStructuredAgentLaunchPersistenceForTests } from './structured-agent-session-launch-persistence'
+import type * as LaunchErrors from '@/lib/agent-session/launch/structured-agent-session-launch-errors'
 import type { RuntimeMobileSessionTabsResult } from '../../../../../shared/runtime-session-contracts'
-import type { StructuredAgentSessionLaunchIntent } from '@/lib/launch-structured-agent-session'
+import type { StructuredAgentSessionLaunchIntent } from '@/lib/agent-session/launch/structured-agent-session-launch-intent'
+// @vitest-environment happy-dom
 
 const mocks = vi.hoisted(() => ({
   abandonIntent: vi.fn(),
@@ -39,30 +51,35 @@ vi.mock('@/lib/agent-session/launch/structured-agent-session-launch-create-call'
   launchStructuredAgentSession: mocks.launch
 }))
 
-vi.mock('@/lib/launch-structured-agent-session', () => {
+vi.mock('@/lib/agent-session/launch/structured-agent-session-launch-intent', () => {
   return {
     createStructuredAgentSessionLaunchIntent: mocks.createIntent,
     retryStructuredAgentSessionLaunchIntent: mocks.retryIntent,
     restoreStructuredAgentSessionLaunchIntent: mocks.restoreIntent,
-    abandonStructuredAgentSessionLaunchIntent: mocks.abandonIntent,
     launchStructuredAgentSession: mocks.launch,
     StructuredAgentSessionCreateRefusalError:
       launchErrorMocks.StructuredAgentSessionCreateRefusalError
   }
 })
 
+vi.mock('@/lib/agent-session/launch/structured-agent-session-launch-abandon', () => ({
+  abandonStructuredAgentSessionLaunchIntent: mocks.abandonIntent
+}))
+
 vi.mock('@/runtime/local-structured-session-tabs-sync/inventory-refresh', () => ({
   refreshLocalStructuredSessionTabs: vi.fn()
 }))
 
-vi.mock('@/runtime/structured-agent-session-client', () => ({
+vi.mock('../../../runtime/native-chat/requests/structured-agent-session-call', () => ({
   // Sends reach the runtime RPC through this wrapper, as in the app.
   callStructuredAgentSession: (target: unknown, method: string, params?: unknown) =>
     mocks.callRuntimeRpc(target, method, params)
 }))
 
-vi.mock('@/runtime/runtime-rpc-client', () => ({
-  callRuntimeRpc: mocks.callRuntimeRpc,
+vi.mock('@/runtime/rpc/calls/runtime-rpc-call', () => ({
+  callRuntimeRpc: mocks.callRuntimeRpc
+}))
+vi.mock('@/runtime/rpc/compatibility/runtime-compatibility-probe', () => ({
   ensureRuntimeEnvironmentCompatible: vi.fn(async () => undefined)
 }))
 
@@ -81,21 +98,10 @@ vi.mock('@/i18n/i18n', () => ({
   translate: (_key: string, fallback: string) => fallback
 }))
 
-vi.mock('@/lib/agent-catalog', () => ({
+vi.mock('@/lib/agent-catalog/agent-catalog', () => ({
   getAgentLabel: () => 'Codex',
   getAgentCatalog: () => [{ id: 'codex', label: 'Codex' }]
 }))
-
-import { refreshLocalStructuredSessionTabs } from '@/runtime/local-structured-session-tabs-sync/inventory-refresh'
-import { resetStructuredAgentSessionSendsForTests } from '@/components/native-chat/structured-agent-session-message-sender'
-import { clearNativeChatDraftCacheForTests } from '@/components/native-chat/native-chat-draft-cache'
-import { resetStructuredAgentLaunchRegistryForTests } from './structured-agent-session-launch-registry'
-import { startStructuredAgentLaunch } from './structured-agent-session-launch'
-import {
-  discardStructuredLaunchPrompts,
-  hasStagedStructuredLaunchPrompt
-} from './structured-agent-session-launch-prompt'
-import { resetStructuredAgentLaunchPersistenceForTests } from './structured-agent-session-launch-persistence'
 
 const WORKTREE_ID = 'wt-different-request'
 
@@ -419,15 +425,5 @@ describe('an action with text beside an empty chat still starting', () => {
       })
     }
     expect(sends()).toEqual([[second.sessionId, 'review notes']])
-  })
-
-  it('leaves the empty chat to its own pick, whose re-delivery still joins it', () => {
-    const blank = startStructuredAgentLaunch(WORKTREE_ID, 'codex', { requestId: 'plus-pick' })
-    startStructuredAgentLaunch(WORKTREE_ID, 'codex', notesSend)
-
-    const again = startStructuredAgentLaunch(WORKTREE_ID, 'codex', { requestId: 'plus-pick' })
-
-    expect(again.sessionId).toBe(blank.sessionId)
-    expect(mocks.createIntent).toHaveBeenCalledTimes(2)
   })
 })

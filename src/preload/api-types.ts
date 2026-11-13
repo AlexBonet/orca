@@ -36,6 +36,7 @@ import type { GithubWorkItemApi } from './api/github-work-item-api'
 import type { GitLabApi } from './api/gitlab-api'
 import type { BitbucketApi, HostedReviewApi } from './api/hosted-review-api'
 import type { JiraApi } from './api/jira-api'
+import type { PlaneApi } from './api/plane-api'
 import type { LinearApi } from './api/linear-api'
 import type { MobileApi } from './api/mobile-api'
 import type { NativeChatApi } from './api/native-chat-api'
@@ -48,6 +49,8 @@ import type {
   NotificationsApi
 } from './api/os-permission-api'
 import type { PetApi } from './api/pet-api'
+import type { AppIconApi } from './api/app-icon-api'
+import type { BrowserPasswordsApi } from './api/browser-passwords-api'
 import type { PluginsApi } from './api/plugin-host-api'
 import type { PreflightApi } from './api/preflight-api'
 import type { PtyApi } from './api/pty-api'
@@ -100,6 +103,7 @@ export type PreloadApi = {
   bitbucket: BitbucketApi
   linear: LinearApi
   jira: JiraApi
+  plane: PlaneApi
   starNag: StarNagApi
   telemetryTrack: TelemetryApi['telemetryTrack']
   telemetrySetOptIn: TelemetryApi['telemetrySetOptIn']
@@ -125,7 +129,9 @@ export type PreloadApi = {
   shell: ShellApi
   skills: SkillsApi
   pet: PetApi
+  appIcon: AppIconApi
   browser: BrowserApi
+  browserPasswords: BrowserPasswordsApi
   emulator: EmulatorApi
   hooks: HooksApi
   ephemeralVm: EphemeralVmApi
@@ -228,11 +234,7 @@ export type {
   PtyManagementSeveredDaemon,
   PtyManagementSeveredDaemonRestartResult
 } from './api/pty-management-api'
-export type {
-  ShellOpenExternalEditorRequest,
-  ShellOpenExternalEditorResult,
-  ShellOpenLocalPathResult
-} from './api/shell-api'
+
 export type {
   DiagnosticsBundlePayload,
   DiagnosticsStatusPayload,

@@ -13,6 +13,7 @@ export type HostOperationOwnership = 'host' | 'credential' | 'client' | 'stream'
 export const HOST_OPERATION_OWNERSHIP = {
   accounts: 'host',
   agent: 'host',
+  agentActivity: 'host',
   agentHooks: 'host',
   agentSession: 'host',
   agentSessionAttachment: 'host',
@@ -49,6 +50,7 @@ export const HOST_OPERATION_OWNERSHIP = {
   orcad: 'host',
   orchestration: 'host',
   pairing: 'host',
+  plane: 'scope-picked',
   plugins: 'host',
   preflight: 'host',
   project: 'host',
@@ -57,6 +59,8 @@ export const HOST_OPERATION_OWNERSHIP = {
   reference: 'host',
   repo: 'host',
   runtime: 'host',
+  // The desktop that owns a recipe VM wakes it; only that desktop's runtime serves the call.
+  runtimeEnvironment: 'host',
   session: 'host',
   settings: 'scope-picked',
   shell: 'client',
